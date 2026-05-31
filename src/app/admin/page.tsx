@@ -45,12 +45,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Total Received */}
-      <div className="bg-gradient-to-r from-amber-500 to-yellow-400 dark:from-amber-600 dark:to-amber-400 rounded-3xl p-6 flex items-center gap-4 transition-colors shadow-lg shadow-amber-500/20 border border-amber-400 dark:border-amber-500">
+      <div className="bg-gradient-to-r from-cyan-600 to-cyan-400 dark:from-cyan-700 dark:to-cyan-500 rounded-3xl p-6 flex items-center gap-4 transition-colors shadow-lg shadow-cyan-500/20 border border-cyan-500 dark:border-cyan-600">
         <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center backdrop-blur-sm">
           <TrendingUp className="w-6 h-6 text-white" />
         </div>
         <div>
-          <p className="text-[10px] sm:text-xs font-bold text-amber-900/70 dark:text-amber-950 uppercase tracking-wider">Total Received</p>
+          <p className="text-[10px] sm:text-xs font-bold text-cyan-950/70 dark:text-cyan-950 uppercase tracking-wider">Total Received</p>
           <h3 className="text-3xl font-serif font-bold text-white mt-1">₹55,000</h3>
         </div>
       </div>
