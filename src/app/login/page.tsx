@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { login } from './actions'
 import { Aperture } from 'lucide-react'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default function LoginPage({
   searchParams,
@@ -56,9 +57,9 @@ export default function LoginPage({
           </div>
         </div>
 
-        <button className="h-11 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors mt-2">
+        <SubmitButton>
           Sign In
-        </button>
+        </SubmitButton>
         
         {searchParams?.message && (
           <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm text-center rounded-xl border border-red-100 dark:border-red-900/50">
