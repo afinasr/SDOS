@@ -14,7 +14,9 @@ export default function OnboardingForm({ project, token, isMock }: { project: an
   const [formData, setFormData] = useState({
     eventDate: project.event_date || "",
     location: project.location || "",
-    notes: ""
+    notes: "",
+    emergencyContact: "",
+    familyDynamics: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +28,14 @@ export default function OnboardingForm({ project, token, isMock }: { project: an
         await new Promise(r => setTimeout(r, 1000));
         toast.success("Successfully submitted form! (Mock)");
       } else {
-        await submitOnboarding(token, formData);
+        const combinedNotes = `
+${formData.notes}
+
+--- Wedding Specifics ---
+Emergency Contact: ${formData.emergencyContact}
+Family Dynamics: ${formData.familyDynamics}
+        `.trim();
+        await submitOnboarding(token, { ...formData, notes: combinedNotes });
         toast.success("Details confirmed successfully!");
       }
       setIsSuccess(true);
@@ -95,12 +104,34 @@ export default function OnboardingForm({ project, token, isMock }: { project: an
         </div>
         
         <div className="space-y-2">
+          <label className="text-xs text-zinc-400 font-medium">Emergency Contact Person & Phone</label>
+          <input 
+            type="text" 
+            placeholder="e.g. Rahul (Brother) - 9876543210"
+            value={formData.emergencyContact}
+            onChange={e => setFormData({...formData, emergencyContact: e.target.value})}
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs text-zinc-400 font-medium">Any complex family dynamics we should be aware of?</label>
+          <textarea 
+            placeholder="e.g. Divorced parents, avoid seating them together during portraits..."
+            value={formData.familyDynamics}
+            onChange={e => setFormData({...formData, familyDynamics: e.target.value})}
+            rows={2}
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow resize-none"
+          />
+        </div>
+
+        <div className="space-y-2">
           <label className="text-xs text-zinc-400 font-medium">Additional Requests or Notes</label>
           <textarea 
             placeholder="Any specific moments you want us to capture? Any scheduling constraints?"
             value={formData.notes}
             onChange={e => setFormData({...formData, notes: e.target.value})}
-            rows={4}
+            rows={3}
             className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow resize-none"
           />
         </div>

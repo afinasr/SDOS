@@ -27,6 +27,18 @@ export async function updateProjectNotesAndDrive(projectId: string, notes: strin
   return data;
 }
 
+export async function updateWeddingDetails(projectId: string, weddingDetails: any) {
+  const { data, error } = await supabase
+    .from('projects')
+    .update({ wedding_details: weddingDetails })
+    .eq('id', projectId)
+    .select();
+    
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/projects/${projectId}`);
+  return data;
+}
+
 export async function addLineItem(projectId: string, desc: string, price: number) {
   const { data, error } = await supabase
     .from('line_items')

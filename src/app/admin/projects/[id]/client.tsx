@@ -21,7 +21,7 @@ const STATUS_STEPS = [
   "Awaiting Selection", "Editing", "Completed"
 ];
 
-const TABS = ["Overview", "Proposal", "Crew", "Milestones", "Photos"];
+const TABS = ["Overview", "Proposal", "Crew", "Milestones", "Timeline", "Deliverables", "Photos"];
 
 export default function ProjectDetailsClient({ 
   initialProject, initialLineItems, initialCrew, initialMilestones, isMock 
@@ -57,6 +57,35 @@ export default function ProjectDetailsClient({
   
   // Dialog State
   const [pendingStatusIndex, setPendingStatusIndex] = useState<number | null>(null);
+
+  // Wedding Specific Details
+  const [weddingDetails, setWeddingDetails] = useState<any>(initialProject.wedding_details || {
+    planner: "",
+    coordinator: "",
+    coupleInsta: "",
+    pixiesetLink: "",
+    downloadPin: "",
+    deliverables: {
+      sneakPeeks: false,
+      highlights: false,
+      gallery: false,
+      album: false
+    }
+  });
+
+  const handleSaveWeddingDetails = async () => {
+    if (isMock) {
+      toast.success("Wedding details saved (mock)");
+      return;
+    }
+    try {
+      const { updateWeddingDetails } = await import('../actions');
+      await updateWeddingDetails(initialProject.id, weddingDetails);
+      toast.success("Wedding details saved successfully");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save details");
+    }
+  };
 
   const [isPending, startTransition] = useTransition();
 
@@ -293,8 +322,46 @@ export default function ProjectDetailsClient({
                   />
                 </div>
 
-                <div className="flex gap-4 pt-2">
-                  <ShutterButton onClick={handleSaveOverview} className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl">
+                <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 sm:p-6 rounded-2xl border border-zinc-200 dark:border-white/5 space-y-4">
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-600" /> Vendor Contacts
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Wedding Planner</label>
+                      <input 
+                        type="text"
+                        placeholder="Name & Phone..."
+                        value={weddingDetails.planner}
+                        onChange={(e) => setWeddingDetails({ ...weddingDetails, planner: e.target.value })}
+                        className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-600 dark:focus:ring-cyan-500 transition-shadow"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Venue Coordinator</label>
+                      <input 
+                        type="text"
+                        placeholder="Name & Phone..."
+                        value={weddingDetails.coordinator}
+                        onChange={(e) => setWeddingDetails({ ...weddingDetails, coordinator: e.target.value })}
+                        className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-600 dark:focus:ring-cyan-500 transition-shadow"
+                      />
+                    </div>
+                    <div className="space-y-2 sm:col-span-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Couple's Instagram Handles</label>
+                      <input 
+                        type="text"
+                        placeholder="@bride @groom"
+                        value={weddingDetails.coupleInsta}
+                        onChange={(e) => setWeddingDetails({ ...weddingDetails, coupleInsta: e.target.value })}
+                        className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-600 dark:focus:ring-cyan-500 transition-shadow"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                  <ShutterButton onClick={() => { handleSaveOverview(); handleSaveWeddingDetails(); }} className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl">
                     <Save className="w-4 h-4 mr-2" />
                     Save Details
                   </ShutterButton>
@@ -413,6 +480,112 @@ export default function ProjectDetailsClient({
                   <Plus className="w-5 h-5" />
                   Add Milestone
                 </button>
+              </div>
+            )}
+
+            {/* TIMELINE TAB */}
+            {activeTab === "Timeline" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-5 sm:p-6 space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Run of Show & Shot List</h3>
+                    <ShutterButton variant="outline" className="text-xs py-2 px-3 border-cyan-600 text-cyan-600">
+                      Load Standard Wedding Template
+                    </ShutterButton>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 rounded-xl flex items-start gap-4">
+                      <div className="bg-white dark:bg-zinc-900 w-16 text-center py-1 rounded text-xs font-bold text-zinc-500 border border-zinc-200 dark:border-white/10 shrink-0">
+                        14:00
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white">Getting Ready (Bride)</h4>
+                        <p className="text-xs text-zinc-500">Location: Presidential Suite. Focus on details (dress, rings).</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 rounded-xl flex items-start gap-4">
+                      <div className="bg-white dark:bg-zinc-900 w-16 text-center py-1 rounded text-xs font-bold text-zinc-500 border border-zinc-200 dark:border-white/10 shrink-0">
+                        16:00
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white">First Look & Couple Portraits</h4>
+                        <p className="text-xs text-zinc-500">Location: Garden Area. Need drone operator ready.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button className="w-full border-2 border-dashed border-zinc-300 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5 font-semibold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2">
+                    <Plus className="w-5 h-5" />
+                    Add Event
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* DELIVERABLES TAB */}
+            {activeTab === "Deliverables" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-5 sm:p-6 space-y-6">
+                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Gallery Delivery</h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Pixieset / Pic-Time Link</label>
+                      <div className="relative">
+                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                        <input 
+                          type="url"
+                          placeholder="Paste gallery URL..."
+                          value={weddingDetails.pixiesetLink}
+                          onChange={(e) => setWeddingDetails({ ...weddingDetails, pixiesetLink: e.target.value })}
+                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-600 dark:focus:ring-cyan-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Download PIN</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g. 8492"
+                        value={weddingDetails.downloadPin}
+                        onChange={(e) => setWeddingDetails({ ...weddingDetails, downloadPin: e.target.value })}
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-600 dark:focus:ring-cyan-500 font-mono tracking-widest"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="h-px w-full bg-zinc-200 dark:bg-white/10" />
+
+                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Delivery Checklist</h3>
+                  <div className="space-y-3">
+                    {[
+                      { key: 'sneakPeeks', label: 'Sneak Peeks Sent (48h)' },
+                      { key: 'highlights', label: 'Highlights Film Delivered' },
+                      { key: 'gallery', label: 'Full Photo Gallery Uploaded' },
+                      { key: 'album', label: 'Wedding Album Sent to Print' }
+                    ].map((item) => (
+                      <label key={item.key} className="flex items-center gap-3 p-4 border border-zinc-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-950 transition-colors">
+                        <input 
+                          type="checkbox"
+                          checked={weddingDetails.deliverables[item.key as keyof typeof weddingDetails.deliverables]}
+                          onChange={(e) => setWeddingDetails({
+                            ...weddingDetails,
+                            deliverables: { ...weddingDetails.deliverables, [item.key]: e.target.checked }
+                          })}
+                          className="w-5 h-5 rounded border-zinc-300 text-cyan-600 focus:ring-cyan-500 dark:border-zinc-700 dark:bg-zinc-900"
+                        />
+                        <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <ShutterButton onClick={handleSaveWeddingDetails} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Delivery Status
+                  </ShutterButton>
+                </div>
               </div>
             )}
 
