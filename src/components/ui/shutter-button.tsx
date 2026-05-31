@@ -2,12 +2,18 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button, ButtonProps } from "./button";
+import { Loader2 } from "lucide-react";
 
-export function ShutterButton({ onClick, children, ...props }: ButtonProps) {
+export interface ShutterButtonProps extends ButtonProps {
+  loading?: boolean;
+}
+
+export function ShutterButton({ onClick, children, loading, ...props }: ShutterButtonProps) {
   const [flashing, setFlashing] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (loading) return;
     if (!shouldReduceMotion) {
       setFlashing(true);
       setTimeout(() => setFlashing(false), 200); // Allow animation to finish
@@ -17,9 +23,9 @@ export function ShutterButton({ onClick, children, ...props }: ButtonProps) {
 
   return (
     <>
-      <motion.div whileTap={{ scale: 0.95 }} className={typeof props.className === 'string' && props.className.includes('w-full') ? 'w-full' : 'inline-block'}>
-        <Button onClick={handleClick} {...props} className={typeof props.className === 'string' ? props.className : undefined}>
-          {children}
+      <motion.div whileTap={loading ? {} : { scale: 0.95 }} className={typeof props.className === 'string' && props.className.includes('w-full') ? 'w-full' : 'inline-block'}>
+        <Button onClick={handleClick} disabled={loading || props.disabled} {...props} className={typeof props.className === 'string' ? props.className : undefined}>
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : children}
         </Button>
       </motion.div>
 
