@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { login } from './actions'
 import { Aperture } from 'lucide-react'
 import { SubmitButton } from '@/components/ui/submit-button'
+import Image from 'next/image'
 
 export default function LoginPage({
   searchParams,
@@ -13,8 +14,8 @@ export default function LoginPage({
       
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black flex items-center justify-center mb-6 shadow-xl">
-          <Aperture size={32} strokeWidth={1.5} />
+        <div className="w-20 h-20 relative mb-6 shadow-2xl rounded-2xl overflow-hidden ring-1 ring-zinc-900/10 dark:ring-white/10">
+          <Image src="/logo.png" alt="Studio Desk Logo" fill className="object-cover" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           Welcome back

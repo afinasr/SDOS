@@ -127,6 +127,28 @@ export default function SettingsView() {
           </div>
         </div>
       </div>
+
+      {/* Account Section */}
+      <div className="space-y-4 pt-4 pb-12">
+        <h2 className="text-xl font-serif font-bold text-zinc-900 dark:text-white">Account</h2>
+        
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-6 space-y-4 transition-colors">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Sign out of your Studio Desk admin account. You will need to enter your credentials to access the dashboard again.
+          </p>
+          <form action={async () => {
+            const { logout } = await import('@/app/login/actions');
+            await logout();
+          }}>
+            <button 
+              type="submit"
+              className="w-full h-11 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-medium border border-red-100 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+            >
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
