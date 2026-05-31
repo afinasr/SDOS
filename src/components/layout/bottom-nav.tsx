@@ -16,7 +16,7 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-t border-zinc-200 dark:border-white/10 safe-area-pb transition-colors">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/50 dark:bg-black/50 backdrop-blur-2xl border-t border-zinc-200 dark:border-white/10 safe-area-pb transition-colors">
       <div className="flex justify-around items-center h-16 sm:h-20 max-w-screen-2xl mx-auto px-2">
         {tabs.map((tab) => {
           const isActive = tab.href === "/admin" 

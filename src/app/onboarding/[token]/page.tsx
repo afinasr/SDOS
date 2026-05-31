@@ -31,9 +31,9 @@ export default async function OnboardingPage({ params }: { params: Promise<{ tok
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center py-12 px-4 sm:px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center py-12 px-4 sm:px-6 relative overflow-hidden">
       {/* Background Effect */}
-      <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900 via-zinc-950 to-zinc-950" />
+      <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900 via-black to-black" />
       
       <div className="relative z-10 w-full max-w-2xl">
         <div className="text-center space-y-6 mb-12">

@@ -4,6 +4,8 @@ import { Settings, Plus, Zap, UserPlus, Calendar, Users, TrendingUp, ChevronRigh
 import { ShutterButton } from "@/components/ui/shutter-button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, Variants } from "framer-motion";
+import { playTickSound } from "@/lib/audio";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -11,14 +13,30 @@ export default function AdminDashboard() {
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   const handleNav = (path: string) => {
+    playTickSound();
     setNavigatingTo(path);
     startTransition(() => {
       router.push(path);
     });
   };
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
-    <div className="space-y-4">
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-center pt-1">
         <div>
@@ -47,7 +65,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
         {[
           { label: "ACTIVE", value: "1", icon: Zap, href: "/admin/projects" },
           { label: "LEADS", value: "2", icon: UserPlus, href: "/admin/projects" },
@@ -64,10 +82,10 @@ export default function AdminDashboard() {
             </div>
           </Link>
         ))}
-      </div>
+      </motion.div>
 
       {/* Total Received */}
-      <div className="bg-gradient-to-r from-cyan-600 to-cyan-400 dark:from-cyan-700 dark:to-cyan-500 rounded-3xl p-4 flex items-center gap-3 transition-colors shadow-lg shadow-cyan-500/20 border border-cyan-500 dark:border-cyan-600">
+      <motion.div variants={itemVariants} className="bg-gradient-to-r from-cyan-600 to-cyan-400 dark:from-cyan-700 dark:to-cyan-500 rounded-3xl p-4 flex items-center gap-3 transition-colors shadow-lg shadow-cyan-500/20 border border-cyan-500 dark:border-cyan-600">
         <div className="bg-white/20 w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-sm">
           <TrendingUp className="w-5 h-5 text-white" />
         </div>
@@ -75,12 +93,12 @@ export default function AdminDashboard() {
           <p className="text-[10px] font-bold text-cyan-950/70 dark:text-cyan-950 uppercase tracking-wider">Total Received</p>
           <h3 className="text-2xl font-serif font-bold text-white mt-0.5">₹55,000</h3>
         </div>
-      </div>
+      </motion.div>
 
       {/* Upcoming Shoots */}
-      <div className="space-y-3 pt-2">
+      <motion.div variants={itemVariants} className="space-y-3 pt-2">
         <h2 className="text-lg font-serif font-bold text-zinc-900 dark:text-white">Upcoming Shoots</h2>
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 transition-colors">
+        <div className="bg-white/80 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-3xl overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 transition-colors">
           {[
             { names: "Aisha & Rohan", venue: "The Leela Palace, Mumbai", day: "6", month: "JUN", countdown: "7d" },
             { names: "Kavya & Aryan", venue: "Taj Mahal Hotel, Delhi", day: "6", month: "JUL", countdown: "37d" },
@@ -104,13 +122,13 @@ export default function AdminDashboard() {
             </Link>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Recent Projects */}
-      <div className="space-y-3 pt-2 pb-6">
+      <motion.div variants={itemVariants} className="space-y-3 pt-2 pb-6">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-serif font-bold text-zinc-900 dark:text-white">Recent Projects</h2>
-          <Link href="/admin/projects" className="text-[11px] font-medium text-cyan-600 dark:text-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors">See all</Link>
+          <Link href="/admin/projects" onClick={() => playTickSound()} className="text-[11px] font-medium text-cyan-600 dark:text-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors">See all</Link>
         </div>
         
         <div className="space-y-2.5">
@@ -118,7 +136,7 @@ export default function AdminDashboard() {
             { names: "Meera & Dev", type: "Destination Wedding", date: "21 Jul 2026", loc: "Umaid Bhawan Palace, Jodhpur", status: "Lead", sColor: "text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-400/10 border-orange-200 dark:border-orange-400/20" },
             { names: "Nisha & Karan", type: "Engagement", date: "25 May 2026", loc: "ITC Grand Chola, Chennai", status: "Lead", sColor: "text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-400/10 border-orange-200 dark:border-orange-400/20" },
           ].map((proj, i) => (
-            <Link key={i} href={`/admin/projects/${proj.names.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="block bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-3.5 relative overflow-hidden transition-colors hover:bg-zinc-50 dark:hover:bg-white/5 cursor-pointer">
+            <Link key={i} href={`/admin/projects/${proj.names.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} onClick={() => playTickSound()} className="block bg-white/80 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-3xl p-3.5 relative overflow-hidden transition-colors hover:bg-zinc-50 dark:hover:bg-white/5 cursor-pointer">
               <div className={`absolute top-3.5 right-3.5 flex items-center gap-1 border px-1.5 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-wide bg-opacity-20 backdrop-blur-md ${proj.sColor}`}>
                  <div className={`w-1 h-1 rounded-full bg-current`} />
                  {proj.status}
@@ -140,7 +158,7 @@ export default function AdminDashboard() {
             </Link>
           ))}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

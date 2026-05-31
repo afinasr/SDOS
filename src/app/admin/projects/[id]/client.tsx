@@ -15,6 +15,7 @@ import {
   updateProjectStatus, updateProjectNotesAndDrive, addLineItem, deleteLineItem, 
   toggleCrewAssignment, addMilestone, toggleMilestoneStatus, generateMagicLink 
 } from "../actions";
+import { playTickSound, playSwooshSound } from "@/lib/audio";
 
 const STATUS_STEPS = [
   "Lead", "Proposal Sent", "Active", "Post-Production", 
@@ -152,6 +153,7 @@ export default function ProjectDetailsClient({
     }
     
     try {
+      playSwooshSound();
       const token = await generateMagicLink(initialProject.id);
       setMagicLink(token);
       navigator.clipboard.writeText(`${window.location.origin}/onboarding/${token}`);
@@ -245,7 +247,7 @@ export default function ProjectDetailsClient({
               {TABS.map(tab => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => { playTickSound(); setActiveTab(tab); }}
                   className={`py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
                     activeTab === tab 
                       ? "border-cyan-600 text-cyan-600 dark:border-cyan-400 dark:text-cyan-400" 

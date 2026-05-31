@@ -63,7 +63,7 @@ Family Dynamics: ${formData.familyDynamics}
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 sm:p-10 rounded-3xl shadow-2xl space-y-8">
+    <form onSubmit={handleSubmit} className="bg-transparent p-6 sm:p-10 rounded-3xl space-y-8 w-full">
       
       <div className="space-y-5">
         <div>
@@ -87,7 +87,7 @@ Family Dynamics: ${formData.familyDynamics}
             required
             value={formData.eventDate}
             onChange={e => setFormData({...formData, eventDate: e.target.value})}
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
+            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
           />
         </div>
         
@@ -99,7 +99,7 @@ Family Dynamics: ${formData.familyDynamics}
             placeholder="e.g. The Leela Palace, Mumbai"
             value={formData.location}
             onChange={e => setFormData({...formData, location: e.target.value})}
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
+            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
           />
         </div>
         
@@ -110,7 +110,7 @@ Family Dynamics: ${formData.familyDynamics}
             placeholder="e.g. Rahul (Brother) - 9876543210"
             value={formData.emergencyContact}
             onChange={e => setFormData({...formData, emergencyContact: e.target.value})}
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
+            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
           />
         </div>
 
@@ -121,7 +121,7 @@ Family Dynamics: ${formData.familyDynamics}
             value={formData.familyDynamics}
             onChange={e => setFormData({...formData, familyDynamics: e.target.value})}
             rows={2}
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow resize-none"
+            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner resize-none"
           />
         </div>
 
@@ -132,7 +132,7 @@ Family Dynamics: ${formData.familyDynamics}
             value={formData.notes}
             onChange={e => setFormData({...formData, notes: e.target.value})}
             rows={3}
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow resize-none"
+            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner resize-none"
           />
         </div>
       </div>
