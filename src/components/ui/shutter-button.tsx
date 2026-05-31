@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button, ButtonProps } from "./button";
-import { Loader2 } from "lucide-react";
+import { Aperture } from "lucide-react";
 
 export interface ShutterButtonProps extends ButtonProps {
   loading?: boolean;
@@ -25,7 +25,7 @@ export function ShutterButton({ onClick, children, loading, ...props }: ShutterB
     <>
       <motion.div whileTap={loading ? {} : { scale: 0.95 }} className={typeof props.className === 'string' && props.className.includes('w-full') ? 'w-full' : 'inline-block'}>
         <Button onClick={handleClick} disabled={loading || props.disabled} {...props} className={typeof props.className === 'string' ? props.className : undefined}>
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : children}
+          {loading ? <Aperture className="w-5 h-5 animate-spin text-zinc-500" /> : children}
         </Button>
       </motion.div>
 

@@ -36,8 +36,8 @@ export default function LoginPage({
         
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-20 h-20 relative mb-4 shadow-2xl rounded-2xl overflow-hidden ring-1 ring-white/20 bg-white flex items-center justify-center">
-            <Aperture className="w-12 h-12 text-black" strokeWidth={1.5} />
+          <div className="w-24 h-24 relative mb-4 shadow-2xl rounded-full overflow-hidden ring-4 ring-white/10 bg-white flex items-center justify-center">
+            <Aperture className="w-16 h-16 text-black fill-black" strokeWidth={1} />
           </div>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-white drop-shadow-md">
             Studio Desk
