@@ -8,6 +8,7 @@ import {
   IndianRupee, Link as LinkIcon, Plus, X, User, CheckCircle2, Image as ImageIcon
 } from "lucide-react";
 import { ShutterButton } from "@/components/ui/shutter-button";
+import { ParticleBackground } from "@/components/ui/particle-background";
 
 const STATUS_STEPS = [
   "Lead", "Proposal Sent", "Active", "Post-Production", 
@@ -21,7 +22,10 @@ export default function ProjectDetailsView({ params }: { params: Promise<{ id: s
   const { id } = use(params);
 
   // Capitalize and format ID for display
-  const displayTitle = id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' & ');
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  const displayTitle = isUuid 
+    ? "Aisha & Rohan" 
+    : id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' & ');
 
   const [activeStep, setActiveStep] = useState(0);
   const [activeTab, setActiveTab] = useState("Overview");
@@ -444,8 +448,10 @@ export default function ProjectDetailsView({ params }: { params: Promise<{ id: s
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[60] bg-[#FAF9F6] dark:bg-black flex flex-col font-sans"
+            className="fixed inset-0 z-[60] bg-[#FAF9F6] dark:bg-black flex flex-col font-sans overflow-hidden"
           >
+            <ParticleBackground />
+            
             {/* Premium Portal Header */}
             <div className="flex items-center justify-between px-6 sm:px-12 py-6 border-b border-zinc-200/50 dark:border-white/5 bg-white/70 dark:bg-black/70 backdrop-blur-2xl shrink-0 sticky top-0 z-10">
               <div className="flex items-center gap-4">
@@ -462,7 +468,7 @@ export default function ProjectDetailsView({ params }: { params: Promise<{ id: s
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto relative z-10">
               <div className="max-w-3xl mx-auto p-6 sm:p-12 space-y-12 pb-32">
                 
                 {/* Greeting & Context */}
