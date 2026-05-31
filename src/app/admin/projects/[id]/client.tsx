@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { 
   updateProjectStatus, updateProjectNotesAndDrive, addLineItem, deleteLineItem, 
   toggleCrewAssignment, addMilestone, toggleMilestoneStatus, generateMagicLink 
-} from "./actions";
+} from "../actions";
 
 const STATUS_STEPS = [
   "Lead", "Proposal Sent", "Active", "Post-Production", 
@@ -183,25 +183,23 @@ export default function ProjectDetailsClient({
                 const isPast = idx < activeStep;
                 return (
                   <Dialog key={step} open={pendingStatusIndex === idx} onOpenChange={(open) => !open && setPendingStatusIndex(null)}>
-                    <DialogTrigger asChild>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (idx !== activeStep) {
-                            setPendingStatusIndex(idx);
-                          }
-                        }}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-colors border text-sm font-medium ${
-                          isActive 
-                            ? "bg-cyan-600 border-cyan-600 text-white dark:bg-cyan-500 dark:border-cyan-500 dark:text-black shadow-md shadow-cyan-600/20" 
-                            : isPast 
-                              ? "bg-zinc-100 border-zinc-200 text-zinc-800 dark:bg-white/10 dark:border-white/20 dark:text-white"
-                              : "bg-transparent border-dashed border-zinc-300 text-zinc-400 dark:border-white/10 dark:text-zinc-600"
-                        }`}
-                      >
-                        {isPast && <CheckCircle2 className="w-4 h-4" />}
-                        {step}
-                      </button>
+                    <DialogTrigger
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (idx !== activeStep) {
+                          setPendingStatusIndex(idx);
+                        }
+                      }}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-colors border text-sm font-medium ${
+                        isActive 
+                          ? "bg-cyan-600 border-cyan-600 text-white dark:bg-cyan-500 dark:border-cyan-500 dark:text-black shadow-md shadow-cyan-600/20" 
+                          : isPast 
+                            ? "bg-zinc-100 border-zinc-200 text-zinc-800 dark:bg-white/10 dark:border-white/20 dark:text-white"
+                            : "bg-transparent border-dashed border-zinc-300 text-zinc-400 dark:border-white/10 dark:text-zinc-600"
+                      }`}
+                    >
+                      {isPast && <CheckCircle2 className="w-4 h-4" />}
+                      {step}
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
