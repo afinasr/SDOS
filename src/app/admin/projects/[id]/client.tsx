@@ -174,51 +174,40 @@ export default function ProjectDetailsClient({
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto pb-24">
           
-          {/* Status Stepper */}
+          {/* Status Dropdown */}
           <div className="px-4 sm:px-6 py-6 border-b border-zinc-200 dark:border-white/10">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Project Status</h3>
-            <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar">
-              {STATUS_STEPS.map((step, idx) => {
-                const isActive = idx === activeStep;
-                const isPast = idx < activeStep;
-                return (
-                  <Dialog key={step} open={pendingStatusIndex === idx} onOpenChange={(open) => !open && setPendingStatusIndex(null)}>
-                    <DialogTrigger
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (idx !== activeStep) {
-                          setPendingStatusIndex(idx);
-                        }
-                      }}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-colors border text-sm font-medium ${
-                        isActive 
-                          ? "bg-cyan-600 border-cyan-600 text-white dark:bg-cyan-500 dark:border-cyan-500 dark:text-black shadow-md shadow-cyan-600/20" 
-                          : isPast 
-                            ? "bg-zinc-100 border-zinc-200 text-zinc-800 dark:bg-white/10 dark:border-white/20 dark:text-white"
-                            : "bg-transparent border-dashed border-zinc-300 text-zinc-400 dark:border-white/10 dark:text-zinc-600"
-                      }`}
-                    >
-                      {isPast && <CheckCircle2 className="w-4 h-4" />}
-                      {step}
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Change Project Status</DialogTitle>
-                        <DialogDescription>
-                          Are you sure you want to move this project to <span className="font-bold text-zinc-900 dark:text-white">{step}</span>? This may trigger notifications to the client or crew.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter className="mt-4">
-                        <ShutterButton variant="outline" onClick={() => setPendingStatusIndex(null)}>Cancel</ShutterButton>
-                        <ShutterButton className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={handleStatusChange}>
-                          Confirm Status Change
-                        </ShutterButton>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                );
-              })}
-            </div>
+            <select 
+              value={STATUS_STEPS[activeStep]} 
+              onChange={(e) => {
+                const idx = STATUS_STEPS.indexOf(e.target.value);
+                if (idx !== activeStep) {
+                  setPendingStatusIndex(idx);
+                }
+              }}
+              className="w-full sm:max-w-xs bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none shadow-sm cursor-pointer"
+            >
+              {STATUS_STEPS.map((step) => (
+                <option key={step} value={step}>{step}</option>
+              ))}
+            </select>
+
+            <Dialog open={pendingStatusIndex !== null} onOpenChange={(open) => !open && setPendingStatusIndex(null)}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Change Project Status</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to move this project to <span className="font-bold text-zinc-900 dark:text-white">{pendingStatusIndex !== null ? STATUS_STEPS[pendingStatusIndex] : ""}</span>? This may trigger notifications to the client or crew.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="mt-4">
+                  <ShutterButton variant="outline" onClick={() => setPendingStatusIndex(null)}>Cancel</ShutterButton>
+                  <ShutterButton className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={handleStatusChange}>
+                    Confirm Status Change
+                  </ShutterButton>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Section Tabs */}

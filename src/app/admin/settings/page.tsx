@@ -3,6 +3,7 @@
 import { Monitor, Moon, Sun, ToggleLeft, ToggleRight, Save } from "lucide-react";
 import { useSettings } from "@/components/providers/settings-provider";
 import { ShutterButton } from "@/components/ui/shutter-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { toast } from "sonner";
 
 export default function SettingsView() {
@@ -141,12 +142,9 @@ export default function SettingsView() {
             const { logout } = await import('@/app/login/actions');
             await logout();
           }}>
-            <button 
-              type="submit"
-              className="w-full h-11 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-medium border border-red-100 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-            >
+            <SubmitButton>
               Sign Out
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </div>
