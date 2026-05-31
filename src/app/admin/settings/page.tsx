@@ -3,6 +3,7 @@
 import { Monitor, Moon, Sun, ToggleLeft, ToggleRight, Save } from "lucide-react";
 import { useSettings } from "@/components/providers/settings-provider";
 import { ShutterButton } from "@/components/ui/shutter-button";
+import { toast } from "sonner";
 
 export default function SettingsView() {
   const { enable3DBackground, setEnable3DBackground, theme, setTheme } = useSettings();
@@ -120,7 +121,7 @@ export default function SettingsView() {
           </div>
           
           <div className="pt-4">
-            <ShutterButton className="w-full bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black font-bold py-4 rounded-xl shadow-lg shadow-cyan-500/20 transition-all border-none" onClick={() => alert("Settings saved!")}>
+            <ShutterButton className="w-full bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black font-bold py-4 rounded-xl shadow-lg shadow-cyan-500/20 transition-all border-none" onClick={() => toast.success("Settings saved successfully!")}>
               <Save className="w-5 h-5 mr-2 inline" />
               Save Settings
             </ShutterButton>
