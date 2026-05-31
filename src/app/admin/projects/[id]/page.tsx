@@ -22,16 +22,16 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
     const { data: li } = await supabase.from('line_items').select('*').eq('project_id', id);
     lineItems = li || [];
     
-    // Fetch crew members. Since we don't have a complex join easily without a view, we'll fetch all profiles and assignments
-    const { data: allProfiles } = await supabase.from('profiles').select('*').eq('role', 'crew');
+    // Fetch crew members.
+    const { data: allProfiles } = await supabase.from('crew_members').select('*');
     const { data: assignments } = await supabase.from('project_crew').select('*').eq('project_id', id);
     
-    const assignedIds = assignments?.map(a => a.user_id) || [];
+    const assignedIds = assignments?.map(a => a.crew_id) || [];
     crew = (allProfiles || []).map(profile => ({
       id: profile.id,
-      name: profile.full_name || 'Unknown',
-      role: 'Crew',
-      fee: 10000, // Default fee since we didn't add it to profiles
+      name: profile.name || 'Unknown',
+      role: profile.role || 'Crew',
+      fee: profile.fee || 10000,
       assigned: assignedIds.includes(profile.id)
     }));
     

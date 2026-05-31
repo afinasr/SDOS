@@ -73,14 +73,14 @@ export async function toggleCrewAssignment(projectId: string, crewId: string, as
   if (assigned) {
     const { error } = await supabase
       .from('project_crew')
-      .insert([{ project_id: projectId, user_id: crewId }]);
+      .insert([{ project_id: projectId, crew_id: crewId }]);
     if (error) throw new Error(error.message);
   } else {
     const { error } = await supabase
       .from('project_crew')
       .delete()
       .eq('project_id', projectId)
-      .eq('user_id', crewId);
+      .eq('crew_id', crewId);
     if (error) throw new Error(error.message);
   }
   revalidatePath(`/admin/projects/${projectId}`);
