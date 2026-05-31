@@ -7,11 +7,25 @@ CREATE TYPE project_status AS ENUM ('Lead', 'Proposal Sent', 'Active', 'Post-Pro
 -- 2. Create Profiles Table (extends the Supabase Auth Users table)
 CREATE TABLE public.profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  full_name TEXT NOT NULL,
+  full_name TEXT,
   role user_role NOT NULL DEFAULT 'crew',
   phone TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Automatically create a profile when a new user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, role)
+  VALUES (new.id, 'New User', 'owner'); -- Temporarily defaulting to owner for testing
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- 3. Create Projects Table
 CREATE TABLE public.projects (
