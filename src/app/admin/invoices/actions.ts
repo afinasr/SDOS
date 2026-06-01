@@ -61,3 +61,30 @@ export async function updateInvoiceStatus(invoiceId: string, newStatus: string) 
   if (error) throw new Error(error.message);
   revalidatePath('/admin/invoices');
 }
+
+export async function getTemplates() {
+  const { data, error } = await supabase
+    .from('invoice_templates')
+    .select('*')
+    .order('created_at', { ascending: true });
+    
+  return data || [];
+}
+
+export async function createTemplate(name: string, items_included: number, default_notes: string) {
+  const { error } = await supabase.from('invoice_templates').insert([{ name, items_included, default_notes }]);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/invoices');
+}
+
+export async function updateTemplate(id: string, name: string, items_included: number, default_notes: string) {
+  const { error } = await supabase.from('invoice_templates').update({ name, items_included, default_notes }).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/invoices');
+}
+
+export async function deleteTemplate(id: string) {
+  const { error } = await supabase.from('invoice_templates').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/invoices');
+}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, Trash2, Calendar, MapPin, Briefcase, 
-  IndianRupee, Link as LinkIcon, Plus, X, User, CheckCircle2, Image as ImageIcon, Save, Copy
+  IndianRupee, Link as LinkIcon, Plus, X, User, CheckCircle2, Image as ImageIcon, Save, Copy, Send
 } from "lucide-react";
 import { ShutterButton } from "@/components/ui/shutter-button";
 import { ParticleBackground } from "@/components/ui/particle-background";
@@ -103,6 +103,23 @@ export default function ProjectDetailsClient({
     }
     setActiveStep(pendingStatusIndex);
     setPendingStatusIndex(null);
+  };
+
+  const handleSendProposal = async () => {
+    if (!isMock) {
+      toast.promise(updateProjectStatus(initialProject.id, "Proposal Sent"), {
+        loading: 'Updating status...',
+        success: 'Proposal sent!',
+        error: 'Failed to send proposal'
+      });
+    }
+    setActiveStep(1); // "Proposal Sent" is index 1
+
+    const portalUrl = `${window.location.origin}/portal/${initialProject.id}`;
+    const message = encodeURIComponent(`Hi ${displayTitle},\n\nWe have prepared a customized proposal for your event. You can review the details and accept the proposal directly via your Client Portal here:\n\n${portalUrl}\n\nLet us know if you have any questions!\n\nBest,\nAlice Studio`);
+    const waUrl = `https://wa.me/?text=${message}`;
+    // Comment out opening WhatsApp for submit action based on feedback
+    // window.open(waUrl, '_blank');
   };
 
   const handleSaveOverview = () => {
@@ -244,7 +261,7 @@ export default function ProjectDetailsClient({
           {/* Section Tabs */}
           <div className="px-4 sm:px-6 py-2 border-b border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-zinc-900/20 sticky top-0 z-10 backdrop-blur-md">
             <div className="flex overflow-x-auto gap-6 no-scrollbar">
-              {TABS.map(tab => (
+              {TABS.filter(tab => tab !== "Crew" || activeStep >= 2).map(tab => (
                 <button
                   key={tab}
                   onClick={() => { playTickSound(); setActiveTab(tab); }}
@@ -407,30 +424,43 @@ export default function ProjectDetailsClient({
                   <span className="text-2xl font-serif font-bold text-amber-500 dark:text-amber-400">₹{totalProposal.toLocaleString()}</span>
                 </div>
 
-                <button 
-                  onClick={() => setShowAddItem(true)}
-                  className="w-full border-2 border-dashed border-zinc-300 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5 font-semibold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Add Line Item
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => setShowAddItem(true)}
+                    className="w-full border-2 border-dashed border-zinc-300 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5 font-semibold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add Line Item
+                  </button>
+
+                  <ShutterButton 
+                    onClick={handleSendProposal}
+                    disabled={lineItems.length === 0}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    Submit
+                  </ShutterButton>
+                </div>
               </div>
             )}
 
             {/* CREW TAB */}
-            {activeTab === "Crew" && (
+            {activeTab === "Crew" && activeStep >= 2 && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {crew.map((member, idx) => (
                   <div 
                     key={member.id} 
-                    onClick={() => toggleCrew(idx)}
-                    className={`flex items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
+                    className={`flex items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all ${
                       member.assigned 
                         ? "bg-cyan-50 border-cyan-200 dark:bg-cyan-950/30 dark:border-cyan-900/50" 
                         : "bg-white border-zinc-200 dark:bg-zinc-900 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/5"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer"
+                      onClick={() => toggleCrew(idx)}
+                    >
                       <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
                         member.assigned ? "bg-cyan-600 border-cyan-600 text-white" : "border-zinc-300 dark:border-zinc-600"
                       }`}>
@@ -444,9 +474,24 @@ export default function ProjectDetailsClient({
                         <p className={`text-xs ${member.assigned ? "text-cyan-700 dark:text-cyan-400" : "text-zinc-500"}`}>{member.role}</p>
                       </div>
                     </div>
-                    <span className={`font-semibold text-sm ${member.assigned ? "text-cyan-800 dark:text-cyan-300" : "text-zinc-500"}`}>
-                      ₹{member.fee.toLocaleString()}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <span className={`font-semibold text-sm ${member.assigned ? "text-cyan-800 dark:text-cyan-300" : "text-zinc-500"}`}>
+                        ₹{member.fee.toLocaleString()}
+                      </span>
+                      {member.assigned && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const msg = encodeURIComponent(`Hi ${member.name}, you have been assigned to ${displayTitle} on ${new Date(initialProject.event_date).toLocaleDateString()}. View details in your crew portal: ${window.location.origin}/crew/${member.id}`);
+                            window.open(`https://wa.me/?text=${msg}`, '_blank');
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1"
+                        >
+                          <Send className="w-3 h-3" />
+                          Notify
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

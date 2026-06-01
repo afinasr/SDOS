@@ -4,6 +4,10 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export async function submitOnboarding(token: string, data: {
+  clientNames: string;
+  email: string;
+  phone: string;
+  eventType: string;
   eventDate: string;
   location: string;
   notes: string;
@@ -21,10 +25,13 @@ export async function submitOnboarding(token: string, data: {
   const { error: updateError } = await supabase
     .from('projects')
     .update({
+      client_name: data.clientNames,
+      title: `${data.clientNames} - ${data.eventType}`,
+      event_type: data.eventType,
       event_date: data.eventDate,
       location: data.location,
-      notes: data.notes,
-      status: 'Proposal Sent' // Automatically advance status once they fill the form
+      notes: `Email: ${data.email}\nPhone: ${data.phone}\n\n${data.notes}`,
+      status: 'Lead' // Keep it as Lead so Admin can generate a proposal/invoice next
     })
     .eq('id', project.id);
 

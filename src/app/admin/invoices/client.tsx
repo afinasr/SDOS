@@ -4,22 +4,18 @@ import { ShutterButton } from "@/components/ui/shutter-button";
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { playTickSound, playSwooshSound } from "@/lib/audio";
-import { createInvoice, updateInvoiceStatus } from "./actions";
+import { createInvoice, updateInvoiceStatus, createTemplate, updateTemplate, deleteTemplate } from "./actions";
 
-export default function InvoicesClient({ initialInvoices, projects }: { initialInvoices: any[], projects: any[] }) {
+export default function InvoicesClient({ initialInvoices, projects, initialTemplates }: { initialInvoices: any[], projects: any[], initialTemplates: any[] }) {
   const [activeTab, setActiveTab] = useState<"Invoices" | "Templates">("Invoices");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Form State
+  // Invoice Form State
   const [projectId, setProjectId] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
-
-  const templates = [
-    { id: "TPL-001", name: "Standard Wedding Package", items: 5, defaultNotes: "Includes 2 lead photographers..." },
-    { id: "TPL-002", name: "Pre-Wedding Shoot", items: 2, defaultNotes: "Half day coverage..." },
-  ];
 
   const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +37,64 @@ export default function InvoicesClient({ initialInvoices, projects }: { initialI
     });
   };
 
+  // Template Form State
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [tplName, setTplName] = useState("");
+  const [tplItems, setTplItems] = useState(1);
+  const [tplNotes, setTplNotes] = useState("");
+
+  const handleSaveTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    startTransition(async () => {
+      try {
+        playTickSound();
+        if (editingTemplate) {
+          await updateTemplate(editingTemplate.id, tplName, tplItems, tplNotes);
+        } else {
+          await createTemplate(tplName, tplItems, tplNotes);
+        }
+        setShowTemplateModal(false);
+        setEditingTemplate(null);
+        setTplName("");
+        setTplItems(1);
+        setTplNotes("");
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  };
+
+  const handleDeleteTemplate = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Delete this template?")) return;
+    startTransition(async () => {
+      await deleteTemplate(id);
+    });
+  };
+
+  const openEditTemplate = (tpl: any) => {
+    setEditingTemplate(tpl);
+    setTplName(tpl.name);
+    setTplItems(tpl.items_included);
+    setTplNotes(tpl.default_notes || "");
+    setShowTemplateModal(true);
+  };
+
   const handleUpdateStatus = (id: string, status: string) => {
     startTransition(async () => {
       playTickSound();
       await updateInvoiceStatus(id, status);
     });
+  };
+
+  const handleShareWhatsApp = (inv: any) => {
+    const portalUrl = `${window.location.origin}/portal/${inv.project_id}`;
+    const message = encodeURIComponent(`Hi ${inv.client_name},\n\nYour invoice (${inv.invoice_number}) for ₹${Number(inv.amount).toLocaleString()} is ready. You can view the details and pay securely via your Client Portal here:\n\n${portalUrl}\n\nThanks,\nStudio Team`);
+    const waUrl = `https://wa.me/?text=${message}`;
+    window.open(waUrl, '_blank');
+    if (inv.status === 'Draft') {
+      handleUpdateStatus(inv.id, 'Sent');
+    }
   };
 
   const containerVariants: Variants = {
@@ -65,7 +114,21 @@ export default function InvoicesClient({ initialInvoices, projects }: { initialI
       {/* Header */}
       <div className="flex justify-between items-center pt-2">
         <h1 className="text-4xl font-serif font-bold text-zinc-900 dark:text-white">Invoices</h1>
-        <ShutterButton size="icon" className="rounded-full bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black border-none" onClick={() => { playSwooshSound(); setShowCreateModal(true); }}>
+        <ShutterButton 
+          size="icon" 
+          className="rounded-full bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black border-none" 
+          onClick={() => { 
+            playSwooshSound(); 
+            if (activeTab === "Invoices") setShowCreateModal(true);
+            else {
+              setEditingTemplate(null);
+              setTplName("");
+              setTplItems(1);
+              setTplNotes("");
+              setShowTemplateModal(true);
+            }
+          }}
+        >
           <Plus className="w-5 h-5" />
         </ShutterButton>
       </div>
@@ -131,12 +194,12 @@ export default function InvoicesClient({ initialInvoices, projects }: { initialI
                 <div className="grid grid-cols-2 border-t border-zinc-200 dark:border-white/10 divide-x divide-zinc-200 dark:divide-white/10">
                   <button 
                     disabled={inv.status === "Paid"}
-                    onClick={() => handleUpdateStatus(inv.id, 'Sent')}
+                    onClick={() => handleShareWhatsApp(inv)}
                     className={`py-4 flex items-center justify-center gap-2 text-xs font-medium transition-colors ${
                     inv.status === "Paid" ? "text-zinc-400 dark:text-zinc-600 cursor-not-allowed" : "text-blue-600 dark:text-blue-500 hover:bg-zinc-50 dark:hover:bg-white/5"
                   }`}>
                     <Send className="w-4 h-4" />
-                    Send
+                    WhatsApp
                   </button>
                   <button 
                     disabled={inv.status === "Paid"}
@@ -160,19 +223,36 @@ export default function InvoicesClient({ initialInvoices, projects }: { initialI
         </motion.div>
       )}
 
-      {/* Templates Tab (Mock for now) */}
+      {/* Templates Tab */}
       {activeTab === "Templates" && (
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-4 pt-2">
-          {templates.map((tpl) => (
-            <motion.div variants={itemVariants} key={tpl.id} className="bg-white/80 dark:bg-zinc-900/50 backdrop-blur-xl border border-dashed border-zinc-300 dark:border-white/20 rounded-[1.5rem] p-5 cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors text-center">
+          {initialTemplates.map((tpl) => (
+            <motion.div 
+              variants={itemVariants} 
+              key={tpl.id} 
+              onClick={() => openEditTemplate(tpl)}
+              className="bg-white/80 dark:bg-zinc-900/50 backdrop-blur-xl border border-dashed border-zinc-300 dark:border-white/20 rounded-[1.5rem] p-5 cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors text-center relative group"
+            >
+               <button 
+                 onClick={(e) => handleDeleteTemplate(tpl.id, e)}
+                 className="absolute top-4 right-4 text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+               >
+                 <X className="w-4 h-4" />
+               </button>
                <h4 className="font-bold text-zinc-900 dark:text-white">{tpl.name}</h4>
-               <p className="text-xs text-zinc-500 mt-1">{tpl.items} items included</p>
+               <p className="text-xs text-zinc-500 mt-1">{tpl.items_included} items included</p>
+               {tpl.default_notes && <p className="text-[10px] text-zinc-400 mt-2 line-clamp-2 max-w-sm mx-auto">{tpl.default_notes}</p>}
             </motion.div>
           ))}
+          {initialTemplates.length === 0 && (
+             <div className="text-center py-10 text-zinc-500 dark:text-zinc-400">
+                No templates configured yet. Click the + button to add one!
+             </div>
+          )}
         </motion.div>
       )}
 
-      {/* Create Invoice Modal */}
+      {/* Modals */}
       <AnimatePresence>
         {showCreateModal && (
           <motion.div
@@ -222,6 +302,57 @@ export default function InvoicesClient({ initialInvoices, projects }: { initialI
                   <div className="pt-4">
                     <ShutterButton loading={isPending} type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-4 rounded-xl font-bold">
                       Generate Invoice
+                    </ShutterButton>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showTemplateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowTemplateModal(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-md bg-zinc-50 dark:bg-zinc-900 rounded-t-3xl sm:rounded-3xl border border-zinc-200 dark:border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="p-5 border-b border-zinc-200 dark:border-white/10 flex justify-between items-center bg-white/50 dark:bg-black/50 shrink-0">
+                <h3 className="font-bold text-lg text-zinc-900 dark:text-white">{editingTemplate ? "Edit Template" : "New Template"}</h3>
+                <button onClick={() => setShowTemplateModal(false)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 p-2 rounded-full">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto flex-1">
+                <form onSubmit={handleSaveTemplate} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Template Name</label>
+                    <input type="text" required value={tplName} onChange={e => setTplName(e.target.value)} className="w-full bg-white dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="e.g. Wedding Standard" />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Items Included</label>
+                    <input type="number" required min={1} value={tplItems} onChange={e => setTplItems(Number(e.target.value))} className="w-full bg-white dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Default Notes</label>
+                    <textarea value={tplNotes} onChange={e => setTplNotes(e.target.value)} rows={3} className="w-full bg-white dark:bg-black/50 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none" placeholder="What's included in this package..." />
+                  </div>
+
+                  <div className="pt-4">
+                    <ShutterButton loading={isPending} type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-4 rounded-xl font-bold">
+                      Save Template
                     </ShutterButton>
                   </div>
                 </form>

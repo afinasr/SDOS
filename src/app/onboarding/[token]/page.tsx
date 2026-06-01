@@ -7,28 +7,14 @@ export default async function OnboardingPage({ params }: { params: Promise<{ tok
 
   let project = null;
 
-  if (token === 'mock-token-123') {
-    project = {
-      id: 'mock',
-      title: 'Aisha & Rohan',
-      client_name: 'Aisha & Rohan',
-      event_date: '2026-06-06',
-      location: 'The Leela Palace, Mumbai',
-      event_type: 'Wedding',
-      package_name: 'Premium',
-      total_value: 120000,
-      magic_link_token: 'mock-token-123'
-    };
-  } else {
-    const { data } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('magic_link_token', token)
-      .single();
-      
-    if (!data) notFound();
-    project = data;
-  }
+  const { data } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('magic_link_token', token)
+    .single();
+    
+  if (!data) notFound();
+  project = data;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center py-12 px-4 sm:px-6 relative overflow-hidden">

@@ -1,13 +1,30 @@
 "use client";
-import { Plus, MapPin, Calendar as CalendarIcon, ChevronRight } from "lucide-react";
+import { Link2, MapPin, Calendar as CalendarIcon, ChevronRight } from "lucide-react";
 import { ShutterButton } from "@/components/ui/shutter-button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
+import { generateOnboardingLink } from "./actions";
+import { toast } from "sonner";
 
 export default function ClientPage({ projects }: { projects: any[] }) {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("All");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateLink = async () => {
+    setIsGenerating(true);
+    try {
+      const project = await generateOnboardingLink();
+      const url = `${window.location.origin}/onboarding/${project.magic_link_token}`;
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard!");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate link.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const filteredProjects = useMemo(() => {
     if (activeFilter === "All") return projects;
@@ -33,8 +50,13 @@ export default function ClientPage({ projects }: { projects: any[] }) {
       {/* Header */}
       <div className="flex justify-between items-center pt-2">
         <h1 className="text-4xl font-serif font-bold text-zinc-900 dark:text-white">Projects</h1>
-        <ShutterButton size="icon" className="rounded-full bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black border-none" onClick={() => router.push("/admin/projects/new")}>
-          <Plus className="w-5 h-5" />
+        <ShutterButton 
+          className="bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black border-none rounded-xl" 
+          onClick={handleGenerateLink}
+          disabled={isGenerating}
+        >
+          <Link2 className="w-4 h-4 mr-2" />
+          {isGenerating ? "Generating..." : "Generate Link"}
         </ShutterButton>
       </div>
 
@@ -102,10 +124,12 @@ export default function ClientPage({ projects }: { projects: any[] }) {
             <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">No Projects Found</h3>
             <p className="text-zinc-500 text-sm mb-6 max-w-sm mx-auto">There are no projects matching this filter. Create a new project to get started.</p>
             <ShutterButton 
-              onClick={() => router.push("/admin/projects/new")} 
+              onClick={handleGenerateLink} 
+              disabled={isGenerating}
               className="bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black font-semibold rounded-xl px-6 py-3"
             >
-              Add Project
+              <Link2 className="w-4 h-4 mr-2" />
+              {isGenerating ? "Generating..." : "Generate Link"}
             </ShutterButton>
           </div>
         )}

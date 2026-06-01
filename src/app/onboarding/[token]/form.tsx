@@ -12,11 +12,13 @@ export default function OnboardingForm({ project, token, isMock }: { project: an
   const [isSuccess, setIsSuccess] = useState(false);
   
   const [formData, setFormData] = useState({
-    eventDate: project.event_date || "",
-    location: project.location || "",
-    notes: "",
-    emergencyContact: "",
-    familyDynamics: ""
+    clientNames: "",
+    email: "",
+    phone: "",
+    eventType: "Wedding",
+    eventDate: project.event_date ? new Date(project.event_date).toISOString().split('T')[0] : "",
+    location: "",
+    notes: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,14 +30,7 @@ export default function OnboardingForm({ project, token, isMock }: { project: an
         await new Promise(r => setTimeout(r, 1000));
         toast.success("Successfully submitted form! (Mock)");
       } else {
-        const combinedNotes = `
-${formData.notes}
-
---- Wedding Specifics ---
-Emergency Contact: ${formData.emergencyContact}
-Family Dynamics: ${formData.familyDynamics}
-        `.trim();
-        await submitOnboarding(token, { ...formData, notes: combinedNotes });
+        await submitOnboarding(token, formData);
         toast.success("Details confirmed successfully!");
       }
       setIsSuccess(true);
@@ -57,7 +52,7 @@ Family Dynamics: ${formData.familyDynamics}
           <CheckCircle2 className="w-10 h-10 text-cyan-400" />
         </div>
         <h2 className="text-2xl font-serif font-bold text-white">Thank You!</h2>
-        <p className="text-zinc-400">Your details have been confirmed. We've notified Alice Studio and they will be in touch shortly.</p>
+        <p className="text-zinc-400">Your details have been received. We will send you a detailed proposal and quote shortly!</p>
       </motion.div>
     );
   }
@@ -65,30 +60,77 @@ Family Dynamics: ${formData.familyDynamics}
   return (
     <form onSubmit={handleSubmit} className="bg-transparent p-6 sm:p-10 rounded-3xl space-y-8 w-full">
       
-      <div className="space-y-5">
-        <div>
-          <h2 className="text-lg font-bold text-white mb-1">Project Name</h2>
-          <p className="text-zinc-400 text-sm">{project.client_name || project.title}</p>
-        </div>
+      <div className="space-y-4 pt-2">
+        <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Your Details</h3>
         
-        <div>
-          <h2 className="text-lg font-bold text-white mb-1">Selected Package</h2>
-          <p className="text-cyan-400 font-semibold">{project.package_name || "Premium Package"}</p>
+        <div className="space-y-2">
+          <label className="text-xs text-zinc-400 font-medium">Names (e.g. Aisha & Rohan)</label>
+          <input 
+            type="text" 
+            required
+            placeholder="Aisha & Rohan"
+            value={formData.clientNames}
+            onChange={e => setFormData({...formData, clientNames: e.target.value})}
+            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs text-zinc-400 font-medium">Email Address</label>
+            <input 
+              type="email" 
+              required
+              placeholder="hello@example.com"
+              value={formData.email}
+              onChange={e => setFormData({...formData, email: e.target.value})}
+              className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs text-zinc-400 font-medium">Phone Number</label>
+            <input 
+              type="tel" 
+              required
+              placeholder="+91 98765 43210"
+              value={formData.phone}
+              onChange={e => setFormData({...formData, phone: e.target.value})}
+              className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
+            />
+          </div>
         </div>
       </div>
       
       <div className="space-y-4 pt-6 border-t border-white/10">
-        <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Confirm Details</h3>
+        <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Event Details</h3>
         
-        <div className="space-y-2">
-          <label className="text-xs text-zinc-400 font-medium">Event Date</label>
-          <input 
-            type="date" 
-            required
-            value={formData.eventDate}
-            onChange={e => setFormData({...formData, eventDate: e.target.value})}
-            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs text-zinc-400 font-medium">Event Type</label>
+            <select
+              required
+              value={formData.eventType}
+              onChange={e => setFormData({...formData, eventType: e.target.value})}
+              className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner appearance-none"
+            >
+              <option value="Wedding" className="bg-zinc-900">Wedding</option>
+              <option value="Pre-Wedding" className="bg-zinc-900">Pre-Wedding</option>
+              <option value="Engagement" className="bg-zinc-900">Engagement</option>
+              <option value="Maternity" className="bg-zinc-900">Maternity</option>
+              <option value="Corporate" className="bg-zinc-900">Corporate</option>
+            </select>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-xs text-zinc-400 font-medium">Event Date</label>
+            <input 
+              type="date" 
+              required
+              value={formData.eventDate}
+              onChange={e => setFormData({...formData, eventDate: e.target.value})}
+              className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
+            />
+          </div>
         </div>
         
         <div className="space-y-2">
@@ -104,48 +146,24 @@ Family Dynamics: ${formData.familyDynamics}
         </div>
         
         <div className="space-y-2">
-          <label className="text-xs text-zinc-400 font-medium">Emergency Contact Person & Phone</label>
-          <input 
-            type="text" 
-            placeholder="e.g. Rahul (Brother) - 9876543210"
-            value={formData.emergencyContact}
-            onChange={e => setFormData({...formData, emergencyContact: e.target.value})}
-            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs text-zinc-400 font-medium">Any complex family dynamics we should be aware of?</label>
+          <label className="text-xs text-zinc-400 font-medium">Requirements & Notes</label>
           <textarea 
-            placeholder="e.g. Divorced parents, avoid seating them together during portraits..."
-            value={formData.familyDynamics}
-            onChange={e => setFormData({...formData, familyDynamics: e.target.value})}
-            rows={2}
-            className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner resize-none"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs text-zinc-400 font-medium">Additional Requests or Notes</label>
-          <textarea 
-            placeholder="Any specific moments you want us to capture? Any scheduling constraints?"
+            rows={3}
+            placeholder="Tell us about your event, what you're looking for, etc."
             value={formData.notes}
             onChange={e => setFormData({...formData, notes: e.target.value})}
-            rows={3}
             className="w-full bg-white/5 backdrop-blur-xl border-none rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner resize-none"
           />
         </div>
       </div>
-      
-      <div className="pt-4">
-        <ShutterButton 
-          type="submit" 
-          loading={isSubmitting}
-          className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-900/30"
-        >
-          Confirm Details & Begin Journey
-        </ShutterButton>
-      </div>
+
+      <ShutterButton 
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-cyan-900/20"
+      >
+        {isSubmitting ? "Submitting..." : "Submit Inquiry"}
+      </ShutterButton>
     </form>
   );
 }
