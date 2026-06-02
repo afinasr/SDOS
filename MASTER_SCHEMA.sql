@@ -12,6 +12,9 @@ DROP TABLE IF EXISTS public.line_items CASCADE;
 DROP TABLE IF EXISTS public.milestones CASCADE;
 DROP TABLE IF EXISTS public.invoices CASCADE;
 DROP TABLE IF EXISTS public.invoice_templates CASCADE;
+DROP TABLE IF EXISTS public.expenses CASCADE;
+DROP TABLE IF EXISTS public.tasks CASCADE;
+DROP TABLE IF EXISTS public.crew_unavailability CASCADE;
 DROP TABLE IF EXISTS public.crew_members CASCADE;
 DROP TABLE IF EXISTS public.projects CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
@@ -68,6 +71,9 @@ CREATE TABLE public.projects (
   status project_status NOT NULL DEFAULT 'Lead',
   magic_link_token UUID DEFAULT gen_random_uuid(),
   wedding_details JSONB DEFAULT '{}'::jsonb,
+  payment_schedule JSONB DEFAULT '[100]'::jsonb,
+  contract_signature TEXT,
+  deliverables JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -100,6 +106,14 @@ CREATE TABLE public.project_crew (
   PRIMARY KEY (project_id, crew_id)
 );
 
+CREATE TABLE public.crew_unavailability (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  crew_id UUID REFERENCES public.crew_members(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- -----------------------------------------------------
 -- 7. CREATE MILESTONES
 -- -----------------------------------------------------
@@ -113,7 +127,20 @@ CREATE TABLE public.milestones (
 );
 
 -- -----------------------------------------------------
--- 8. CREATE INVOICES & TEMPLATES
+-- 8. CREATE EXPENSES
+-- -----------------------------------------------------
+CREATE TABLE public.expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  amount NUMERIC(10,2) NOT NULL,
+  description TEXT,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------
+-- 9. CREATE INVOICES & TEMPLATES
 -- -----------------------------------------------------
 CREATE TABLE public.invoices (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -136,7 +163,20 @@ CREATE TABLE public.invoice_templates (
 );
 
 -- -----------------------------------------------------
--- 9. INSERT DUMMY DATA
+-- 10. CREATE TASKS (KANBAN)
+-- -----------------------------------------------------
+CREATE TABLE public.tasks (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'To Do', -- 'To Do', 'In Progress', 'Review', 'Done'
+  assigned_to UUID REFERENCES public.crew_members(id) ON DELETE SET NULL,
+  due_date DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------
+-- 11. INSERT DUMMY DATA
 -- -----------------------------------------------------
 INSERT INTO public.crew_members (name, role, description, fee) VALUES 
 ('Arjun Mehta', 'Lead Photographer', 'Candid & Portrait', 8000),
@@ -150,20 +190,25 @@ INSERT INTO public.invoice_templates (name, items_included, default_notes) VALUE
 ('Maternity Session', 1, '2 hour session at location of choice. 50 edited images.');
 
 -- -----------------------------------------------------
--- 10. DISABLE RLS EVERYWHERE (FOR LOCAL/EASY DEV)
+-- 12. DISABLE RLS EVERYWHERE (FOR LOCAL/EASY DEV)
 -- -----------------------------------------------------
 ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.line_items DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.crew_members DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_crew DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.crew_unavailability DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.milestones DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoice_templates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.expenses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tasks DISABLE ROW LEVEL SECURITY;
 
 -- -----------------------------------------------------
--- 11. STORAGE BUCKET (GALLERIES)
+-- 14. STORAGE BUCKET (GALLERIES)
 -- -----------------------------------------------------
 -- Note: Make sure you created the 'galleries' bucket in the UI!
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Upload" ON storage.objects;
 CREATE POLICY "Public Access" ON storage.objects FOR SELECT TO public USING (bucket_id = 'galleries');
 CREATE POLICY "Auth Upload" ON storage.objects FOR INSERT TO public WITH CHECK (bucket_id = 'galleries');

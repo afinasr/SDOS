@@ -7,18 +7,29 @@ import { FileText, Check, X } from "lucide-react";
 import { acceptProposalAndGenerateInvoice, rejectProposal } from "../actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import SignatureCanvas from 'react-signature-canvas';
+import { useRef } from "react";
 
 export default function ProposalClientCard({ project, lineItems }: { project: any, lineItems: any[] }) {
   const [isPending, setIsPending] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const sigCanvas = useRef<any>(null);
   const router = useRouter();
 
   const totalAmount = lineItems.reduce((acc, item) => acc + Number(item.price), 0);
 
   const handleAccept = async () => {
+    if (sigCanvas.current?.isEmpty()) {
+      toast.error("Please provide a signature.");
+      return;
+    }
+    
     setIsPending(true);
     try {
-      await acceptProposalAndGenerateInvoice(project.id, totalAmount, project.client_name);
+      const signatureData = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+      await acceptProposalAndGenerateInvoice(project.id, totalAmount, project.client_name, signatureData);
       toast.success("Proposal accepted! Your invoice has been generated.");
+      setShowSignature(false);
       router.refresh();
     } catch (e: any) {
       toast.error(e.message || "Failed to accept proposal");
@@ -85,7 +96,7 @@ export default function ProposalClientCard({ project, lineItems }: { project: an
           <span className="text-2xl font-serif font-bold text-amber-400">₹{totalAmount.toLocaleString()}</span>
         </div>
 
-        {lineItems.length > 0 && (
+        {lineItems.length > 0 && !showSignature && (
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
             <Button 
               disabled={isPending}
@@ -98,12 +109,35 @@ export default function ProposalClientCard({ project, lineItems }: { project: an
             </Button>
             <Button 
               disabled={isPending}
-              onClick={handleAccept}
+              onClick={() => setShowSignature(true)}
               className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-6"
             >
               <Check className="w-4 h-4 mr-2" />
-              Accept Proposal
+              Proceed to Sign
             </Button>
+          </div>
+        )}
+
+        {showSignature && (
+          <div className="pt-4 border-t border-white/10 animate-in fade-in zoom-in-95">
+            <p className="text-zinc-300 mb-2 font-medium">Please sign below to accept</p>
+            <div className="bg-white rounded-xl overflow-hidden border-2 border-cyan-500/50">
+               <SignatureCanvas 
+                  ref={sigCanvas} 
+                  canvasProps={{className: 'w-full h-40 cursor-crosshair'}} 
+               />
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="ghost" onClick={() => sigCanvas.current?.clear()} className="text-zinc-400 hover:text-white">
+                 Clear
+              </Button>
+              <Button variant="outline" onClick={() => setShowSignature(false)} className="border-white/10 text-white">
+                 Cancel
+              </Button>
+              <Button onClick={handleAccept} disabled={isPending} className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold">
+                 {isPending ? "Saving..." : "Confirm & Sign"}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

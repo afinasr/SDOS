@@ -13,6 +13,7 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
   let lineItems = [];
   let crew = [];
   let milestones = [];
+  let expenses = [];
 
   if (!isUuid) {
     notFound();
@@ -41,12 +42,16 @@ export default async function ProjectDetailsPage({ params }: { params: Promise<{
   const { data: m } = await supabase.from('milestones').select('*').eq('project_id', id);
   milestones = m || [];
 
+  const { data: ex } = await supabase.from('expenses').select('*').eq('project_id', id).order('date', { ascending: false });
+  expenses = ex || [];
+
   return (
     <ProjectDetailsClient 
       initialProject={project}
       initialLineItems={lineItems}
       initialCrew={crew}
       initialMilestones={milestones}
+      initialExpenses={expenses}
       isMock={!isUuid}
     />
   );

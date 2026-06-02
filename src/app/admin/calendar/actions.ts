@@ -1,16 +1,21 @@
 "use server";
-
 import { supabase } from "@/lib/supabase";
 
-export async function getCalendarProjects() {
-  const { data, error } = await supabase
+export async function getCalendarData() {
+  const { data: projects, error: projectsError } = await supabase
     .from('projects')
-    .select('id, title, event_date, location, status')
-    .order('event_date', { ascending: true });
+    .select('id, title, event_date, status, location')
+    .neq('status', 'Completed');
 
-  if (error) {
-    console.error("Error fetching projects for calendar:", error);
-    return [];
-  }
-  return data;
+  const { data: unavailabilities, error: unavailError } = await supabase
+    .from('crew_unavailability')
+    .select('id, date, reason, crew_members(name)');
+
+  if (projectsError) console.error("Error fetching projects for calendar:", projectsError);
+  if (unavailError) console.error("Error fetching unavailabilities:", unavailError);
+
+  return {
+    projects: projects || [],
+    unavailabilities: unavailabilities || []
+  };
 }

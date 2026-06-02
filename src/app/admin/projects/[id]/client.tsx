@@ -16,18 +16,19 @@ import {
   toggleCrewAssignment, addMilestone, toggleMilestoneStatus, generateMagicLink 
 } from "../actions";
 import { playTickSound, playSwooshSound } from "@/lib/audio";
+import { createClient } from "@/utils/supabase/client";
 
 const STATUS_STEPS = [
   "Lead", "Proposal Sent", "Active", "Post-Production", 
   "Awaiting Selection", "Editing", "Completed"
 ];
 
-const TABS = ["Overview", "Proposal", "Crew", "Milestones", "Timeline", "Deliverables", "Photos"];
+const TABS = ["Overview", "Proposal", "Financials", "Crew", "Milestones", "Timeline", "Deliverables"];
 
 export default function ProjectDetailsClient({ 
-  initialProject, initialLineItems, initialCrew, initialMilestones, isMock 
+  initialProject, initialLineItems, initialCrew, initialMilestones, initialExpenses, isMock 
 }: { 
-  initialProject: any, initialLineItems: any[], initialCrew: any[], initialMilestones: any[], isMock: boolean 
+  initialProject: any, initialLineItems: any[], initialCrew: any[], initialMilestones: any[], initialExpenses: any[], isMock: boolean 
 }) {
   const router = useRouter();
   
@@ -50,11 +51,19 @@ export default function ProjectDetailsClient({
 
   const [crew, setCrew] = useState(initialCrew || []);
   const [milestones, setMilestones] = useState(initialMilestones || []);
+  const [expenses, setExpenses] = useState(initialExpenses || []);
   
   const [showAddMilestone, setShowAddMilestone] = useState(false);
   const [newMilestone, setNewMilestone] = useState({ label: "", amount: "" });
+
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [newExpense, setNewExpense] = useState({ category: "", amount: "", description: "" });
   
+  const [paymentScheduleStr, setPaymentScheduleStr] = useState((initialProject.payment_schedule || [100]).join(', '));
+
   const [magicLink, setMagicLink] = useState(initialProject.magic_link_token || "");
+  
+  const [deliverablesLinks, setDeliverablesLinks] = useState<any[]>(initialProject.deliverables || []);
   
   // Dialog State
   const [pendingStatusIndex, setPendingStatusIndex] = useState<number | null>(null);
@@ -106,12 +115,21 @@ export default function ProjectDetailsClient({
   };
 
   const handleSendProposal = async () => {
+    const parsedSchedule = paymentScheduleStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+    const totalPercentage = parsedSchedule.reduce((a, b) => a + b, 0);
+    if (totalPercentage !== 100) {
+      toast.error("Payment schedule percentages must add up to 100.");
+      return;
+    }
+
     if (!isMock) {
       toast.promise(updateProjectStatus(initialProject.id, "Proposal Sent"), {
         loading: 'Updating status...',
         success: 'Proposal sent!',
         error: 'Failed to send proposal'
       });
+      const { updatePaymentSchedule } = await import('../actions');
+      await updatePaymentSchedule(initialProject.id, parsedSchedule);
     }
     setActiveStep(1); // "Proposal Sent" is index 1
 
@@ -187,7 +205,71 @@ export default function ProjectDetailsClient({
     }
   };
 
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newExpense.category || !newExpense.amount) return;
+    
+    startTransition(async () => {
+      try {
+        playTickSound();
+        if (!isMock) {
+          const { addExpense } = await import('../actions');
+          await addExpense(initialProject.id, newExpense.category, Number(newExpense.amount), newExpense.description, new Date().toISOString().split('T')[0]);
+        }
+        setShowAddExpense(false);
+        setNewExpense({ category: "", amount: "", description: "" });
+        playSwooshSound();
+        // Optimistic update not fully implemented here as we'd need the real ID, so we rely on revalidatePath
+        // For mock, just push
+        if (isMock) {
+           setExpenses([...expenses, { id: Date.now().toString(), ...newExpense, amount: Number(newExpense.amount), date: new Date().toISOString().split('T')[0] }]);
+        }
+      } catch (err: any) {
+        toast.error(err.message);
+      }
+    });
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    startTransition(async () => {
+      try {
+        const { deleteExpense } = await import('../actions');
+        await deleteExpense(expenseId, initialProject.id);
+        setExpenses(expenses.filter((e: any) => e.id !== expenseId));
+        toast.success("Expense deleted");
+      } catch (err: any) {
+        toast.error("Failed to delete expense");
+      }
+    });
+  };
+
+  const handleAddDeliverableLink = () => {
+    const newLinks = [...deliverablesLinks, { title: "", url: "" }];
+    setDeliverablesLinks(newLinks);
+  };
+
+  const handleUpdateDeliverableLink = (index: number, field: string, value: string) => {
+    const newLinks = [...deliverablesLinks];
+    newLinks[index] = { ...newLinks[index], [field]: value };
+    setDeliverablesLinks(newLinks);
+  };
+
+  const handleSaveDeliverableLinks = async () => {
+    startTransition(async () => {
+      try {
+        const { updateDeliverablesLinks } = await import('../actions');
+        await updateDeliverablesLinks(initialProject.id, deliverablesLinks);
+        toast.success("Links saved successfully");
+      } catch (e) {
+        toast.error("Failed to save links");
+      }
+    });
+  };
+
   const totalProposal = lineItems.reduce((acc, curr) => acc + curr.price, 0);
+  const totalCrewCost = crew.filter(c => c.assigned).reduce((acc, curr) => acc + curr.fee, 0);
+  const totalExpenses = expenses.reduce((acc, curr) => acc + Number(curr.amount), 0);
+  const netProfit = totalProposal - totalCrewCost - totalExpenses;
 
   return (
     <motion.div 
@@ -258,6 +340,65 @@ export default function ProjectDetailsClient({
             </Dialog>
           </div>
 
+          {/* ADD EXPENSE DIALOG */}
+          <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
+            <DialogContent className="bg-white dark:bg-zinc-950 border-zinc-200 dark:border-white/10 rounded-3xl p-6 sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-serif text-zinc-900 dark:text-white">Log Expense</DialogTitle>
+                <DialogDescription className="text-zinc-500">Record a new cost for this project.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddExpense} className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Category</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. Travel, Equipment Rental, Hard Drive"
+                    className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    value={newExpense.category}
+                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Amount (₹)</label>
+                  <input
+                    required
+                    type="number"
+                    placeholder="0.00"
+                    className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    value={newExpense.amount}
+                    onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Description (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Any additional details"
+                    className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    value={newExpense.description}
+                    onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+                  />
+                </div>
+                <DialogFooter className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddExpense(false)}
+                    className="px-6 py-3 rounded-xl font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(34,211,238,0.2)]"
+                  >
+                    Save Expense
+                  </button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
           {/* Section Tabs */}
           <div className="px-4 sm:px-6 py-2 border-b border-zinc-200 dark:border-white/10 bg-white/50 dark:bg-zinc-900/20 sticky top-0 z-10 backdrop-blur-md">
             <div className="flex overflow-x-auto gap-6 no-scrollbar">
@@ -307,10 +448,17 @@ export default function ProjectDetailsClient({
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Value</p>
+                      <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Revenue</p>
                       <div className="flex items-center gap-2 text-zinc-900 dark:text-white font-medium text-sm">
                         <IndianRupee className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                        1,20,000
+                        {totalProposal.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Net Profit</p>
+                      <div className="flex items-center gap-2 text-zinc-900 dark:text-white font-medium text-sm">
+                        <IndianRupee className="w-4 h-4 text-green-600 dark:text-green-500" />
+                        {netProfit.toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -420,8 +568,25 @@ export default function ProjectDetailsClient({
                 </div>
 
                 <div className="flex justify-between items-center px-4">
-                  <span className="text-zinc-500 font-semibold uppercase tracking-wider text-sm">Total</span>
+                  <span className="text-zinc-500 font-semibold uppercase tracking-wider text-sm">Total Value</span>
                   <span className="text-2xl font-serif font-bold text-amber-500 dark:text-amber-400">₹{totalProposal.toLocaleString()}</span>
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-zinc-200 dark:border-white/10 space-y-4">
+                   <div>
+                     <h4 className="font-bold text-zinc-900 dark:text-white mb-1">Payment Schedule (Split %)</h4>
+                     <p className="text-xs text-zinc-500 mb-3">Define the invoice milestones. Must add up to 100.</p>
+                     <input 
+                        type="text" 
+                        value={paymentScheduleStr}
+                        onChange={(e) => setPaymentScheduleStr(e.target.value)}
+                        placeholder="e.g., 30, 50, 20"
+                        className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
+                     />
+                   </div>
+                   {paymentScheduleStr.split(',').reduce((a, b) => a + (parseInt(b.trim()) || 0), 0) !== 100 && (
+                     <p className="text-xs text-red-500 font-bold">Total is not 100%.</p>
+                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -441,6 +606,58 @@ export default function ProjectDetailsClient({
                     <Send className="w-4 h-4" />
                     Submit
                   </ShutterButton>
+                </div>
+              </div>
+            )}
+
+            {/* FINANCIALS TAB */}
+            {activeTab === "Financials" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 p-5 rounded-3xl">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Gross Revenue</p>
+                    <p className="text-2xl font-serif font-bold text-amber-500 mt-1">₹{totalProposal.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 p-5 rounded-3xl">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Total Costs</p>
+                    <p className="text-2xl font-serif font-bold text-red-500 mt-1">₹{(totalCrewCost + totalExpenses).toLocaleString()}</p>
+                    <p className="text-[10px] text-zinc-400 mt-1">Crew: ₹{totalCrewCost} | Exp: ₹{totalExpenses}</p>
+                  </div>
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 p-5 rounded-3xl">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">Net Profit</p>
+                    <p className="text-2xl font-serif font-bold text-green-600 mt-1">₹{netProfit.toLocaleString()}</p>
+                    <p className="text-[10px] text-zinc-400 mt-1">Margin: {totalProposal ? Math.round((netProfit/totalProposal)*100) : 0}%</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end">
+                   <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Logged Expenses</h3>
+                   <button 
+                     onClick={() => setShowAddExpense(true)}
+                     className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
+                   >
+                     <Plus className="w-4 h-4" /> Add Expense
+                   </button>
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
+                  {expenses.map((exp: any) => (
+                    <div key={exp.id} className="p-4 sm:p-5 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-zinc-900 dark:text-white">{exp.category}</p>
+                        <p className="text-xs text-zinc-500">{exp.description || "No description"}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-semibold text-red-500">-₹{Number(exp.amount).toLocaleString()}</span>
+                        <button onClick={() => handleDeleteExpense(exp.id)} className="text-zinc-300 hover:text-red-500 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {expenses.length === 0 && (
+                    <div className="p-8 text-center text-zinc-500 text-sm">No expenses logged yet.</div>
+                  )}
                 </div>
               </div>
             )}
@@ -575,85 +792,52 @@ export default function ProjectDetailsClient({
             {activeTab === "Deliverables" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-5 sm:p-6 space-y-6">
-                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Gallery Delivery</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-lg text-zinc-900 dark:text-white">External Deliverables</h3>
+                    <button onClick={handleAddDeliverableLink} className="text-sm font-bold text-cyan-600 hover:text-cyan-700 flex items-center gap-1">
+                      <Plus className="w-4 h-4" /> Add Link
+                    </button>
+                  </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Pixieset / Pic-Time Link</label>
-                      <div className="relative">
-                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                        <input 
-                          type="url"
-                          placeholder="Paste gallery URL..."
-                          value={weddingDetails.pixiesetLink}
-                          onChange={(e) => setWeddingDetails({ ...weddingDetails, pixiesetLink: e.target.value })}
-                          className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-600 dark:focus:ring-cyan-500"
-                        />
+                  <div className="space-y-4">
+                    {deliverablesLinks.map((link, idx) => (
+                      <div key={idx} className="flex gap-4 items-start">
+                        <div className="flex-1 space-y-2">
+                          <input 
+                            type="text" placeholder="Title (e.g. Wedding Film)"
+                            value={link.title} onChange={e => handleUpdateDeliverableLink(idx, 'title', e.target.value)}
+                            className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white"
+                          />
+                        </div>
+                        <div className="flex-[2] space-y-2">
+                          <div className="relative">
+                            <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                            <input 
+                              type="url" placeholder="URL (e.g. YouTube, Drive)"
+                              value={link.url} onChange={e => handleUpdateDeliverableLink(idx, 'url', e.target.value)}
+                              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-zinc-900 dark:text-white"
+                            />
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => setDeliverablesLinks(deliverablesLinks.filter((_, i) => i !== idx))}
+                          className="p-3 text-zinc-400 hover:text-red-500"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Download PIN</label>
-                      <input 
-                        type="text"
-                        placeholder="e.g. 8492"
-                        value={weddingDetails.downloadPin}
-                        onChange={(e) => setWeddingDetails({ ...weddingDetails, downloadPin: e.target.value })}
-                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-600 dark:focus:ring-cyan-500 font-mono tracking-widest"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="h-px w-full bg-zinc-200 dark:bg-white/10" />
-
-                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Delivery Checklist</h3>
-                  <div className="space-y-3">
-                    {[
-                      { key: 'sneakPeeks', label: 'Sneak Peeks Sent (48h)' },
-                      { key: 'highlights', label: 'Highlights Film Delivered' },
-                      { key: 'gallery', label: 'Full Photo Gallery Uploaded' },
-                      { key: 'album', label: 'Wedding Album Sent to Print' }
-                    ].map((item) => (
-                      <label key={item.key} className="flex items-center gap-3 p-4 border border-zinc-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-950 transition-colors">
-                        <input 
-                          type="checkbox"
-                          checked={weddingDetails.deliverables[item.key as keyof typeof weddingDetails.deliverables]}
-                          onChange={(e) => setWeddingDetails({
-                            ...weddingDetails,
-                            deliverables: { ...weddingDetails.deliverables, [item.key]: e.target.checked }
-                          })}
-                          className="w-5 h-5 rounded border-zinc-300 text-cyan-600 focus:ring-cyan-500 dark:border-zinc-700 dark:bg-zinc-900"
-                        />
-                        <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{item.label}</span>
-                      </label>
                     ))}
+                    {deliverablesLinks.length === 0 && (
+                      <div className="text-center p-6 text-zinc-500 text-sm border-2 border-dashed border-zinc-200 dark:border-white/10 rounded-xl">
+                        No links added yet. Add YouTube, Vimeo, or Google Drive links here.
+                      </div>
+                    )}
                   </div>
 
-                  <ShutterButton onClick={handleSaveWeddingDetails} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl">
+                  <ShutterButton onClick={handleSaveDeliverableLinks} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl" loading={isPending}>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Delivery Status
+                    Save External Links
                   </ShutterButton>
-                </div>
-              </div>
-            )}
-
-            {/* PHOTOS TAB */}
-            {activeTab === "Photos" && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Delivery Selection</h3>
-                  <span className="text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-1 rounded-md">
-                    24 Selected
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[1,2,3,4,5,6,7,8,9].map(i => (
-                    <div key={i} className="aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-lg flex items-center justify-center overflow-hidden relative">
-                      <ImageIcon className="w-6 h-6 text-zinc-400 dark:text-zinc-600" />
-                      {i % 3 === 0 && (
-                        <div className="absolute top-2 right-2 w-4 h-4 bg-amber-500 rounded-full border-2 border-white dark:border-zinc-900" />
-                      )}
-                    </div>
-                  ))}
                 </div>
               </div>
             )}

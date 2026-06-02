@@ -23,6 +23,8 @@ export default async function PortalOverviewPage({ params }: { params: Promise<{
   // Fetch Line Items for Proposal
   const { data: lineItems } = await supabase.from('line_items').select('*').eq('project_id', projectId);
 
+  const deliverables = project.deliverables || [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -77,6 +79,36 @@ export default async function PortalOverviewPage({ params }: { params: Promise<{
             ))}
             {(!invoices || invoices.length === 0) && (
               <p className="text-zinc-500 text-sm italic">No invoices generated yet.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Deliverables & Gallery */}
+        <Card className="bg-white/5 border-white/10 backdrop-blur-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+               <FileText className="w-5 h-5 text-cyan-400" />
+               Deliverables
+            </CardTitle>
+            <CardDescription className="text-zinc-400">Access your final links.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            {deliverables.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-serif text-lg text-white">External Links</h3>
+                <div className="grid gap-3">
+                  {deliverables.map((link: any, idx: number) => (
+                    <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-4 bg-zinc-900 border border-white/10 rounded-xl hover:bg-zinc-800 transition-colors">
+                      <span className="font-medium text-white">{link.title || 'View Link'}</span>
+                      <FileText className="w-4 h-4 text-cyan-400" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {deliverables.length === 0 && (
+              <p className="text-zinc-500 text-sm italic">No deliverables have been added yet.</p>
             )}
           </CardContent>
         </Card>

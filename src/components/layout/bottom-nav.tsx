@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Briefcase, Users, FileText, Calendar, Settings } from "lucide-react";
+import { Home, Briefcase, Users, FileText, Calendar, Settings, KanbanSquare } from "lucide-react";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -9,6 +9,7 @@ export function BottomNav() {
   const tabs = [
     { name: "Dashboard", href: "/admin", icon: Home },
     { name: "Projects", href: "/admin/projects", icon: Briefcase },
+    { name: "Pipeline", href: "/admin/pipeline", icon: KanbanSquare },
     { name: "Crew", href: "/admin/crew", icon: Users },
     { name: "Invoices", href: "/admin/invoices", icon: FileText },
     { name: "Calendar", href: "/admin/calendar", icon: Calendar },

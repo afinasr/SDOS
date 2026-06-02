@@ -3,23 +3,43 @@
 import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
-export async function acceptProposalAndGenerateInvoice(projectId: string, amount: number, clientName: string) {
-  // Generate an invoice number
-  const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  
-  // Set due date to 7 days from now
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 7);
-  
-  const { error } = await supabase.from('invoices').insert([{
-    project_id: projectId,
-    client_name: clientName,
-    invoice_number: invoiceNumber,
-    amount,
-    status: 'Sent',
-    due_date: dueDate.toISOString().split('T')[0]
-  }]);
+export async function acceptProposalAndGenerateInvoice(projectId: string, amount: number, clientName: string, signatureData: string) {
+  // First save the signature to the project
+  const { error: projError, data: project } = await supabase
+    .from('projects')
+    .update({ contract_signature: signatureData })
+    .eq('id', projectId)
+    .select('payment_schedule')
+    .single();
 
+  if (projError) throw new Error(projError.message);
+
+  // Determine splits
+  const schedule: number[] = project?.payment_schedule || [100];
+  
+  // Generate invoices
+  const invoicesToInsert = schedule.map((percentage, index) => {
+    const splitAmount = (amount * percentage) / 100;
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}-${index + 1}`;
+    
+    // Default due dates: 
+    // Booking (1st) = Due immediately (7 days)
+    // 2nd = Due in 30 days
+    // 3rd = Due in 60 days
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 7 + (index * 30));
+
+    return {
+      project_id: projectId,
+      client_name: clientName,
+      invoice_number: invoiceNumber,
+      amount: splitAmount,
+      status: 'Sent',
+      due_date: dueDate.toISOString().split('T')[0]
+    };
+  });
+
+  const { error } = await supabase.from('invoices').insert(invoicesToInsert);
   if (error) throw new Error(error.message);
 
   revalidatePath(`/portal/${projectId}`);

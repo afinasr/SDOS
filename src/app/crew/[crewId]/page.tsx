@@ -30,7 +30,13 @@ export default async function CrewPortalPage({ params }: { params: { crewId: str
     `)
     .eq('crew_id', params.crewId);
 
+  const { data: unavailabilities } = await supabase
+    .from('crew_unavailability')
+    .select('*')
+    .eq('crew_id', params.crewId)
+    .order('date', { ascending: true });
+
   const assignedProjects = projectsData?.map((p: any) => p.projects) || [];
 
-  return <CrewClient crewMember={crewMember} projects={assignedProjects} />;
+  return <CrewClient crewMember={crewMember} projects={assignedProjects} unavailabilities={unavailabilities || []} />;
 }

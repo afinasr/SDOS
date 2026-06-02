@@ -1,7 +1,7 @@
+import { getCalendarData } from "./actions";
 import CalendarClient from "./client";
-import { getCalendarProjects } from "./actions";
 
 export default async function CalendarView() {
-  const projects = await getCalendarProjects();
-  return <CalendarClient projects={projects} />;
+  const data = await getCalendarData();
+  return <CalendarClient initialData={data} />;
 }

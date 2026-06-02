@@ -1,11 +1,47 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Calendar, MapPin, User, Clock, Camera } from "lucide-react";
+import { Calendar, MapPin, User, Clock, Camera, Plus, Trash2, CalendarOff } from "lucide-react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { addCrewUnavailability, removeCrewUnavailability } from "./actions";
 
-export default function CrewClient({ crewMember, projects }: { crewMember: any, projects: any[] }) {
+export default function CrewClient({ crewMember, projects, unavailabilities }: { crewMember: any, projects: any[], unavailabilities: any[] }) {
   // Only show active and upcoming projects (for demo purposes we just show all assigned)
   const activeProjects = projects.filter(p => p !== null);
+
+  const [isPending, startTransition] = useTransition();
+  const [date, setDate] = useState("");
+  const [reason, setReason] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!date) return;
+    
+    startTransition(async () => {
+      try {
+        await addCrewUnavailability(crewMember.id, date, reason);
+        setShowAdd(false);
+        setDate("");
+        setReason("");
+        toast.success("Dates marked as unavailable");
+      } catch (err: any) {
+        toast.error(err.message);
+      }
+    });
+  };
+
+  const handleRemove = (id: string) => {
+    startTransition(async () => {
+      try {
+        await removeCrewUnavailability(id, crewMember.id);
+        toast.success("Availability restored");
+      } catch (err: any) {
+        toast.error(err.message);
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-6 md:p-10">
@@ -80,6 +116,77 @@ export default function CrewClient({ crewMember, projects }: { crewMember: any, 
                      </div>
                   )}
                 </motion.div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Availability / Leave Management */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-end px-2">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Your Unavailability</h2>
+            <button 
+              onClick={() => setShowAdd(true)}
+              className="bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Add Dates
+            </button>
+          </div>
+
+          {showAdd && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 p-5 rounded-3xl"
+            >
+              <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1 space-y-2 w-full">
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Date</label>
+                  <input 
+                    type="date" 
+                    value={date} onChange={e => setDate(e.target.value)} required
+                    className="w-full bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
+                  />
+                </div>
+                <div className="flex-2 space-y-2 w-full sm:w-[40%]">
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Reason (Optional)</label>
+                  <input 
+                    type="text" placeholder="e.g. Vacation, Sick leave"
+                    value={reason} onChange={e => setReason(e.target.value)}
+                    className="w-full bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
+                  />
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl font-bold text-sm flex-1 sm:flex-none">Cancel</button>
+                  <button type="submit" disabled={isPending} className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-sm flex-1 sm:flex-none transition-colors">{isPending ? "Saving..." : "Save"}</button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
+            {unavailabilities.length === 0 ? (
+              <div className="p-8 text-center text-zinc-500 flex flex-col items-center justify-center gap-3">
+                <CalendarOff className="w-8 h-8 opacity-20" />
+                <p>No unavailable dates marked.</p>
+              </div>
+            ) : (
+              unavailabilities.map((u: any) => (
+                <div key={u.id} className="p-4 sm:p-5 flex justify-between items-center hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg">
+                      {new Date(u.date).getDate()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-zinc-900 dark:text-white text-sm sm:text-base">
+                        {new Date(u.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric', weekday: 'long' })}
+                      </p>
+                      {u.reason && <p className="text-xs text-zinc-500 mt-0.5">{u.reason}</p>}
+                    </div>
+                  </div>
+                  <button onClick={() => handleRemove(u.id)} disabled={isPending} className="text-zinc-300 hover:text-red-500 dark:text-zinc-600 dark:hover:text-red-500 p-2 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               ))
             )}
           </div>

@@ -4,15 +4,13 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export async function generateOnboardingLink() {
-  const token = Math.random().toString(36).substring(2, 15);
   const { data, error } = await supabase
     .from('projects')
     .insert([{
       title: 'New Lead',
       client_name: 'Pending Details',
       event_date: new Date().toISOString(),
-      status: 'Lead',
-      magic_link_token: token
+      status: 'Lead'
     }])
     .select()
     .single();
