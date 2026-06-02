@@ -15,8 +15,11 @@ export default function ClientPage({ projects }: { projects: any[] }) {
   const handleGenerateLink = async () => {
     setIsGenerating(true);
     try {
-      const project = await generateOnboardingLink();
-      const url = `${window.location.origin}/onboarding/${project.magic_link_token}`;
+      const response = await generateOnboardingLink();
+      if (response?.error) {
+        throw new Error(response.error);
+      }
+      const url = `${window.location.origin}/onboarding/${response.magic_link_token}`;
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard!");
     } catch (e: any) {

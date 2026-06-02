@@ -9,13 +9,13 @@ export async function generateOnboardingLink() {
     .insert([{
       title: 'New Lead',
       client_name: 'Pending Details',
-      event_date: new Date().toISOString(),
+      event_date: new Date().toISOString().split('T')[0],
       status: 'Lead'
     }])
     .select()
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath('/admin/projects');
   return data;
 }
