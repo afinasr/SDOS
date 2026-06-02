@@ -4,20 +4,24 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export async function generateOnboardingLink() {
-  const { data, error } = await supabase
-    .from('projects')
-    .insert([{
-      title: 'New Lead',
-      client_name: 'Pending Details',
-      event_date: new Date().toISOString().split('T')[0],
-      status: 'Lead'
-    }])
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{
+        title: 'New Lead',
+        client_name: 'Pending Details',
+        event_date: new Date().toISOString().split('T')[0],
+        status: 'Lead'
+      }])
+      .select()
+      .single();
 
-  if (error) return { error: error.message };
-  revalidatePath('/admin/projects');
-  return data;
+    if (error) return { error: error.message };
+    revalidatePath('/admin/projects');
+    return data;
+  } catch (e: any) {
+    return { error: `Caught Exception: ${e.message}` };
+  }
 }
 
 export async function updateProjectStatus(projectId: string, newStatus: string) {
