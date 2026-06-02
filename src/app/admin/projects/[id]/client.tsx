@@ -115,8 +115,8 @@ export default function ProjectDetailsClient({
   };
 
   const handleSendProposal = async () => {
-    const parsedSchedule = paymentScheduleStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-    const totalPercentage = parsedSchedule.reduce((a, b) => a + b, 0);
+    const parsedSchedule = paymentScheduleStr.split(',').map((s: string) => parseInt(s.trim())).filter((n: number) => !isNaN(n));
+    const totalPercentage = parsedSchedule.reduce((a: number, b: number) => a + b, 0);
     if (totalPercentage !== 100) {
       toast.error("Payment schedule percentages must add up to 100.");
       return;

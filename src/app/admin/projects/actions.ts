@@ -127,6 +127,12 @@ export async function toggleMilestoneStatus(milestoneId: string, projectId: stri
   revalidatePath(`/admin/projects/${projectId}`);
 }
 
+export async function updatePaymentSchedule(projectId: string, schedule: number[]) {
+  const { error } = await supabase.from('projects').update({ payment_schedule: schedule }).eq('id', projectId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/projects/${projectId}`);
+}
+
 export async function generateMagicLink(projectId: string) {
   const { data: project } = await supabase.from('projects').select('magic_link_token').eq('id', projectId).single();
   
