@@ -584,8 +584,8 @@ export default function ProjectDetailsClient({
                         className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-shadow"
                      />
                    </div>
-                   {paymentScheduleStr.split(',').reduce((a, b) => a + (parseInt(b.trim()) || 0), 0) !== 100 && (
-                     <p className="text-xs text-red-500 font-bold">Total is not 100%.</p>
+                   {paymentScheduleStr.split(',').reduce((a: number, b: string) => a + (parseInt(b.trim()) || 0), 0) !== 100 && (
+                     <p className="text-xs text-red-500 font-bold mt-1">Total is not 100%.</p>
                    )}
                 </div>
 

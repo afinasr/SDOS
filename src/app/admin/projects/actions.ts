@@ -148,3 +148,21 @@ export async function generateMagicLink(projectId: string) {
   revalidatePath(`/admin/projects/${projectId}`);
   return token;
 }
+
+export async function addExpense(projectId: string, category: string, amount: number, description: string, date: string) {
+  const { error } = await supabase.from('expenses').insert([{ project_id: projectId, category, amount, description, date }]);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/projects/${projectId}`);
+}
+
+export async function deleteExpense(expenseId: string, projectId: string) {
+  const { error } = await supabase.from('expenses').delete().eq('id', expenseId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/projects/${projectId}`);
+}
+
+export async function updateDeliverablesLinks(projectId: string, deliverablesLinks: any[]) {
+  const { error } = await supabase.from('projects').update({ deliverables: deliverablesLinks }).eq('id', projectId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/projects/${projectId}`);
+}
