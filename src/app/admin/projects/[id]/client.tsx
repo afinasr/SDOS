@@ -280,7 +280,7 @@ export default function ProjectDetailsClient({
       className="fixed inset-0 z-50 bg-zinc-50 dark:bg-zinc-950 flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 backdrop-blur-xl shrink-0">
+      <div className="flex items-center justify-between px-4 pr-16 sm:px-6 py-4 border-b border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 backdrop-blur-xl shrink-0">
         <div className="flex items-center gap-3">
           <ShutterButton size="icon" variant="ghost" onClick={() => router.back()} className="rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 w-10 h-10 shrink-0">
             <ChevronLeft className="w-5 h-5 text-zinc-600 dark:text-zinc-300" />
@@ -578,6 +578,17 @@ export default function ProjectDetailsClient({
                   )}
                 </div>
 
+                {initialProject.contract_signature && (
+                  <div className="bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-zinc-200 dark:border-white/10 space-y-4">
+                     <h4 className="font-bold text-zinc-900 dark:text-white mb-1 flex items-center gap-2">
+                       <CheckCircle2 className="w-5 h-5 text-green-500" /> Contract Signed
+                     </h4>
+                     <div className="bg-white rounded-xl p-2 border border-zinc-200 flex justify-center items-center h-40">
+                       <img src={initialProject.contract_signature} alt="Client Signature" className="max-h-full object-contain mix-blend-multiply" />
+                     </div>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center px-4">
                   <span className="text-zinc-500 font-semibold uppercase tracking-wider text-sm">Total Value</span>
                   <span className="text-2xl font-serif font-bold text-amber-500 dark:text-amber-400">₹{totalProposal.toLocaleString()}</span>
@@ -802,6 +813,35 @@ export default function ProjectDetailsClient({
             {/* DELIVERABLES TAB */}
             {activeTab === "Deliverables" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-5 sm:p-6 space-y-6">
+                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Progress Checklist</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { key: 'sneakPeeks', label: 'Sneak Peeks' },
+                      { key: 'highlights', label: 'Highlight Video' },
+                      { key: 'gallery', label: 'Full Gallery' },
+                      { key: 'album', label: 'Printed Album' }
+                    ].map((item) => (
+                      <label key={item.key} className="flex items-center gap-3 p-4 border border-zinc-200 dark:border-white/10 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
+                        <input 
+                          type="checkbox"
+                          checked={weddingDetails.deliverables?.[item.key] || false}
+                          onChange={(e) => setWeddingDetails({
+                            ...weddingDetails,
+                            deliverables: { ...weddingDetails.deliverables, [item.key]: e.target.checked }
+                          })}
+                          className="w-5 h-5 rounded border-zinc-300 text-cyan-600 focus:ring-cyan-500"
+                        />
+                        <span className="font-medium text-zinc-900 dark:text-white">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <ShutterButton onClick={handleSaveWeddingDetails} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Checklist
+                  </ShutterButton>
+                </div>
+
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-5 sm:p-6 space-y-6">
                   <div className="flex justify-between items-center">
                     <h3 className="font-bold text-lg text-zinc-900 dark:text-white">External Deliverables</h3>

@@ -4,6 +4,7 @@ import ProposalClientCard from './ProposalClientCard';
 import PayInvoiceButton from './PayInvoiceButton';
 import { Sparkles, Calendar, MapPin, Clock, Camera, FileText } from 'lucide-react';
 import OnboardingForm from './form';
+import TrackerView from './TrackerView';
 
 export default async function ClientPortalPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -89,11 +90,16 @@ export default async function ClientPortalPage({ params }: { params: Promise<{ t
                   <ProposalClientCard project={project} lineItems={lineItems} />
                 ) : (
                   <div>
-                    <p className="font-medium text-lg text-zinc-200 mb-2">{project.package_name}</p>
+                    <p className="font-medium text-lg text-zinc-200 mb-2">{project.package_name || "Custom Package"}</p>
                     <p className="text-zinc-400">Total Value: ₹{project.total_value}</p>
                   </div>
                 )}
               </div>
+
+              {/* Progress Tracker (Only show when active or beyond) */}
+              {project.status !== 'Proposal Sent' && project.status !== 'Awaiting Selection' && project.status !== 'Lead' && (
+                <TrackerView project={project} />
+              )}
             </div>
 
             <div className="space-y-8">

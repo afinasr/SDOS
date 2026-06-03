@@ -53,7 +53,7 @@ export default function DashboardClient({
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-4">
       {/* Header */}
-      <div className="flex justify-between items-center pt-1">
+      <div className="flex justify-between items-center pt-1 pr-14">
         <div>
           <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Studio Desk</p>
           <h1 className="text-2xl font-serif font-bold text-zinc-900 dark:text-white mt-0.5">Dashboard</h1>

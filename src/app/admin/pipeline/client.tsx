@@ -94,7 +94,7 @@ export default function PipelineClient({ initialData }: { initialData: any }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end pt-2">
+      <div className="flex justify-between items-end pt-2 pr-14">
         <div>
           <h1 className="text-4xl font-serif font-bold text-zinc-900 dark:text-white">Task Pipeline</h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-2 text-sm">Post-production Kanban board for tracking edits and deliverables.</p>

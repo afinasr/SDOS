@@ -10,7 +10,7 @@ import { NotificationBell } from '@/components/ui/notification-bell';
 function AdminContent({ children }: { children: React.ReactNode }) {
   const { enable3DBackground } = useSettings();
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-white relative pb-20 sm:pb-24 transition-colors duration-300">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-white relative pb-32 sm:pb-36 transition-colors duration-300">
       {enable3DBackground && <SpaceBackground />}
       
       <div className="fixed top-4 right-4 z-50">

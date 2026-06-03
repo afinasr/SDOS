@@ -92,7 +92,7 @@ export default function CalendarClient({ initialData }: { initialData: any }) {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2 pr-14">
         <div>
           <h1 className="text-4xl font-serif font-bold text-zinc-900 dark:text-white flex items-center gap-3">
             <CalendarIcon className="w-8 h-8 text-cyan-600 dark:text-cyan-500" />

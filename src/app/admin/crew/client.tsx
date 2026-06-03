@@ -65,8 +65,10 @@ export default function CrewClient({ initialCrew }: { initialCrew: any[] }) {
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center pt-2">
-        <h1 className="text-4xl font-serif font-bold text-zinc-900 dark:text-white">Crew</h1>
+      <div className="flex justify-between items-center pt-2 pr-14">
+        <div>
+          <h1 className="text-2xl font-serif font-bold text-zinc-900 dark:text-white">Crew Management</h1>
+        </div>
         <ShutterButton size="icon" className="rounded-full bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black border-none" onClick={() => { playSwooshSound(); setShowAddModal(true); }}>
           <UserPlus className="w-5 h-5" />
         </ShutterButton>

@@ -51,8 +51,10 @@ export default function ClientPage({ projects }: { projects: any[] }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center pt-2">
-        <h1 className="text-4xl font-serif font-bold text-zinc-900 dark:text-white">Projects</h1>
+      <div className="flex justify-between items-center pt-2 pr-14">
+        <div>
+          <h1 className="text-2xl font-serif font-bold text-zinc-900 dark:text-white">Projects</h1>
+        </div>
         <ShutterButton 
           className="bg-cyan-600 hover:bg-cyan-700 text-white dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-black border-none rounded-xl" 
           onClick={handleGenerateLink}
