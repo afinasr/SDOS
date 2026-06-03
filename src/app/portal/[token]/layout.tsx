@@ -6,9 +6,9 @@ export default async function PortalLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ projectId: string }>;
+  params: Promise<{ token: string }>;
 }) {
-  const resolvedParams = await params;
+  const { token } = await params;
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-24 relative overflow-hidden">
       <ParticleBackground />
@@ -21,8 +21,8 @@ export default async function PortalLayout({
         {children}
       </main>
       <nav className="fixed bottom-0 w-full bg-black/50 backdrop-blur-md border-t border-white/10 p-4 flex justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
-        <Link href={`/portal/${resolvedParams.projectId}`} className="font-medium">Overview</Link>
-        <Link href={`/portal/${resolvedParams.projectId}/selection`} className="font-medium text-zinc-400 hover:text-white transition-colors">Gallery</Link>
+        <Link href={`/portal/${token}`} className="font-medium">Overview</Link>
+        <Link href={`/portal/${token}/selection`} className="font-medium text-zinc-400 hover:text-white transition-colors">Gallery</Link>
       </nav>
       </div>
     </div>

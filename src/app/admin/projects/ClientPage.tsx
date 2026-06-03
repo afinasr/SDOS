@@ -19,7 +19,7 @@ export default function ClientPage({ projects }: { projects: any[] }) {
       if (response?.error) {
         throw new Error(response.error);
       }
-      const url = `${window.location.origin}/onboarding/${response.magic_link_token}`;
+      const url = `${window.location.origin}/portal/${response.magic_link_token}`;
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard!");
     } catch (e: any) {

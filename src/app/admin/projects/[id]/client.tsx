@@ -182,7 +182,7 @@ export default function ProjectDetailsClient({
     if (isMock) {
       const link = "mock-token-123";
       setMagicLink(link);
-      navigator.clipboard.writeText(`${window.location.origin}/onboarding/${link}`);
+      navigator.clipboard.writeText(`${window.location.origin}/portal/${link}`);
       toast.success("Magic link copied to clipboard!");
       return;
     }
@@ -191,7 +191,7 @@ export default function ProjectDetailsClient({
       playSwooshSound();
       const token = await generateMagicLink(initialProject.id);
       setMagicLink(token);
-      navigator.clipboard.writeText(`${window.location.origin}/onboarding/${token}`);
+      navigator.clipboard.writeText(`${window.location.origin}/portal/${token}`);
       toast.success("Magic link generated & copied to clipboard!");
     } catch (e) {
       toast.error("Failed to generate magic link");
@@ -295,9 +295,20 @@ export default function ProjectDetailsClient({
             <p className="text-xs text-zinc-500 font-medium sm:hidden">{STATUS_STEPS[activeStep]}</p>
           </div>
         </div>
-        <button className="p-2 text-zinc-400 hover:text-red-500 transition-colors">
-          <Trash2 className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {magicLink && (
+            <a 
+              href={`/portal/${magicLink}`} 
+              target="_blank" 
+              className="hidden sm:flex px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 rounded-lg transition-colors border border-cyan-500/20 items-center gap-2 text-xs font-bold uppercase tracking-wider"
+            >
+              View Portal
+            </a>
+          )}
+          <button className="p-2 text-zinc-400 hover:text-red-500 transition-colors">
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Scrollable Content Area */}

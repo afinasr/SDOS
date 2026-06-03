@@ -6,21 +6,16 @@ import { revalidatePath } from "next/cache";
 export async function generateOnboardingLink() {
   try {
     const { data, error } = await supabase
-      .from('projects')
-      .insert([{
-        title: 'New Lead',
-        client_name: 'Pending Details',
-        event_date: new Date().toISOString().split('T')[0],
-        status: 'Lead'
-      }])
+      .from('onboarding_links')
+      .insert([{}]) // Let Postgres generate the token
       .select()
       .single();
 
     if (error) return { error: error.message };
     revalidatePath('/admin/projects');
-    return data;
-  } catch (e: any) {
-    return { error: `Caught Exception: ${e.message}` };
+    return { magic_link_token: data.token }; // Keep return shape consistent for client
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred" };
   }
 }
 

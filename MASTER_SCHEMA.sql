@@ -14,6 +14,8 @@ DROP TABLE IF EXISTS public.invoices CASCADE;
 DROP TABLE IF EXISTS public.invoice_templates CASCADE;
 DROP TABLE IF EXISTS public.expenses CASCADE;
 DROP TABLE IF EXISTS public.tasks CASCADE;
+DROP TABLE IF EXISTS public.notifications CASCADE;
+DROP TABLE IF EXISTS public.onboarding_links CASCADE;
 DROP TABLE IF EXISTS public.crew_unavailability CASCADE;
 DROP TABLE IF EXISTS public.crew_members CASCADE;
 DROP TABLE IF EXISTS public.projects CASCADE;
@@ -128,8 +130,30 @@ CREATE TABLE public.milestones (
   project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
   label TEXT NOT NULL,
   amount NUMERIC(10,2) NOT NULL,
-  status TEXT NOT NULL DEFAULT 'Unpaid',
+  due_date DATE,
+  status TEXT DEFAULT 'Pending',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------
+-- 10. CREATE NOTIFICATIONS
+-- -----------------------------------------------------
+CREATE TABLE public.notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  message TEXT NOT NULL,
+  project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------
+-- 11. CREATE ONBOARDING LINKS
+-- -----------------------------------------------------
+CREATE TABLE public.onboarding_links (
+  token UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_used BOOLEAN DEFAULT false,
+  project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE
 );
 
 -- -----------------------------------------------------
@@ -209,6 +233,8 @@ ALTER TABLE public.invoices DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoice_templates DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.onboarding_links DISABLE ROW LEVEL SECURITY;
 
 -- -----------------------------------------------------
 -- 14. STORAGE BUCKET (GALLERIES)
