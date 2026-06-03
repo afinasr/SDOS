@@ -7,9 +7,15 @@ export async function submitOnboarding(token: string, data: {
   clientNames: string;
   email: string;
   phone: string;
+  secondaryContact: string;
+  guestCount: string;
   eventType: string;
-  eventDate: string;
-  location: string;
+  events: { name: string; date: string; locationLink: string; }[];
+  preferredStyle: string;
+  deliverables: string;
+  moodboard: string;
+  budget: string;
+  heardFrom: string;
   notes: string;
 }) {
   // 1. Verify the token is valid and unused
@@ -24,17 +30,31 @@ export async function submitOnboarding(token: string, data: {
   }
 
   // 2. Create the project
+  // Use the first event's date and location as the primary project fields
+  const primaryEventDate = data.events.length > 0 ? data.events[0].date : null;
+  const primaryLocation = data.events.length > 0 ? data.events[0].locationLink : "";
+
   const { data: project, error: insertError } = await supabase
     .from('projects')
     .insert([{
       client_name: data.clientNames,
       title: `${data.clientNames} - ${data.eventType}`,
       event_type: data.eventType,
-      event_date: data.eventDate,
-      location: data.location,
+      event_date: primaryEventDate,
+      location: primaryLocation,
       notes: `Email: ${data.email}\nPhone: ${data.phone}\n\n${data.notes}`,
       status: 'Lead',
-      magic_link_token: token // Attach token to project so they can use the same link
+      magic_link_token: token,
+      wedding_details: {
+        secondaryContact: data.secondaryContact,
+        guestCount: data.guestCount,
+        preferredStyle: data.preferredStyle,
+        deliverables: data.deliverables,
+        moodboard: data.moodboard,
+        budget: data.budget,
+        heardFrom: data.heardFrom,
+        events: data.events
+      }
     }])
     .select()
     .single();
