@@ -7,7 +7,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { toast } from "sonner";
 
 export default function SettingsView() {
-  const { enable3DBackground, setEnable3DBackground, theme, setTheme } = useSettings();
+  const { enable3DBackground, setEnable3DBackground, theme, setTheme, studioProfile, setStudioProfile } = useSettings();
 
   return (
     <div className="space-y-6">
@@ -87,37 +87,72 @@ export default function SettingsView() {
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl p-6 space-y-4 transition-colors">
           <div className="space-y-1">
             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Studio Name</label>
-            <input type="text" defaultValue="Studio Desk" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all font-serif font-bold" />
+            <input 
+              type="text" 
+              value={studioProfile.name} 
+              onChange={e => setStudioProfile({ ...studioProfile, name: e.target.value })}
+              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all font-serif font-bold" 
+            />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tagline</label>
-            <input type="text" defaultValue="Capturing your best moments" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" />
+            <input 
+              type="text" 
+              value={studioProfile.tagline} 
+              onChange={e => setStudioProfile({ ...studioProfile, tagline: e.target.value })}
+              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" 
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Email</label>
-              <input type="email" defaultValue="hello@studiodesk.com" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" />
+              <input 
+                type="email" 
+                value={studioProfile.email} 
+                onChange={e => setStudioProfile({ ...studioProfile, email: e.target.value })}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" 
+              />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Phone</label>
-              <input type="tel" defaultValue="+91 9876543210" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" />
+              <input 
+                type="tel" 
+                value={studioProfile.phone} 
+                onChange={e => setStudioProfile({ ...studioProfile, phone: e.target.value })}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" 
+              />
             </div>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Address</label>
-            <input type="text" defaultValue="123, Creative Block, Bandra West" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" />
+            <input 
+              type="text" 
+              value={studioProfile.address} 
+              onChange={e => setStudioProfile({ ...studioProfile, address: e.target.value })}
+              className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" 
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">City / State</label>
-              <input type="text" defaultValue="Mumbai, MH" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" />
+              <input 
+                type="text" 
+                value={studioProfile.cityState} 
+                onChange={e => setStudioProfile({ ...studioProfile, cityState: e.target.value })}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all" 
+              />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">GSTIN</label>
-              <input type="text" defaultValue="27AADCB2230M1Z2" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all font-mono uppercase" />
+              <input 
+                type="text" 
+                value={studioProfile.gstin} 
+                onChange={e => setStudioProfile({ ...studioProfile, gstin: e.target.value })}
+                className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white transition-all font-mono uppercase" 
+              />
             </div>
           </div>
           
