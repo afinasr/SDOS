@@ -592,6 +592,8 @@ export default function ProjectDetailsClient({
                       />
                     </div>
                   </div>
+                  </div>
+                </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
                   <ShutterButton 
@@ -615,7 +617,6 @@ export default function ProjectDetailsClient({
                   >
                     <Copy className="w-4 h-4 mr-2" /> {magicLink ? "Copy Link" : "Magic Link"}
                   </ShutterButton>
-                </div>
                 </div>
                 
                 <button onClick={() => setShowPortal(true)} className="w-full bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-zinc-900 font-bold py-4 rounded-2xl shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]">
