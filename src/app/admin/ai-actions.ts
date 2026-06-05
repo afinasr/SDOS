@@ -9,6 +9,24 @@ if (!apiKey) {
 }
 const genAI = new GoogleGenerativeAI(apiKey || "");
 
+async function withRetry<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      if (error?.status === 503 || error?.message?.includes('503')) {
+        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+        await new Promise(res => setTimeout(res, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 export async function generateProposal(notes: string, budget?: string) {
   if (!apiKey) throw new Error("Gemini API key is not configured.");
   
@@ -31,7 +49,7 @@ export async function generateProposal(notes: string, budget?: string) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt));
     const text = result.response.text();
     return JSON.parse(text);
   } catch (e: any) {
@@ -53,7 +71,7 @@ export async function cleanUpNotes(rawNotes: string) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt));
     return result.response.text();
   } catch (e: any) {
     throw new Error("Failed to clean up notes: " + e.message);
@@ -77,7 +95,7 @@ export async function draftMessage(context: any, customPrompt?: string) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt));
     return result.response.text();
   } catch (e: any) {
     throw new Error("Failed to draft message: " + e.message);
@@ -114,7 +132,7 @@ export async function chatWithStudio(query: string) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await withRetry(() => model.generateContent(prompt));
     return result.response.text();
   } catch (e: any) {
     throw new Error("Failed to query studio data: " + e.message);
