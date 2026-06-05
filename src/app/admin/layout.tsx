@@ -7,6 +7,8 @@ import { BottomNav } from '@/components/layout/bottom-nav';
 import { PageTransition } from '@/components/layout/page-transition';
 import { NotificationBell } from '@/components/ui/notification-bell';
 
+import { AIChatBot } from '@/components/AIChatBot';
+
 function AdminContent({ children }: { children: React.ReactNode }) {
   const { enable3DBackground } = useSettings();
   return (
@@ -25,6 +27,7 @@ function AdminContent({ children }: { children: React.ReactNode }) {
         </main>
       </AutofocusWrapper>
       <BottomNav />
+      <AIChatBot />
     </div>
   );
 }

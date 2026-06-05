@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, Trash2, Calendar, MapPin, Briefcase, 
-  IndianRupee, Link as LinkIcon, Plus, X, User, CheckCircle2, Image as ImageIcon, Save, Copy, Send
+  IndianRupee, Link as LinkIcon, Plus, X, User, CheckCircle2, Image as ImageIcon, Save, Copy, Send, Sparkles, MessageSquare
 } from "lucide-react";
 import { ShutterButton } from "@/components/ui/shutter-button";
 import { ParticleBackground } from "@/components/ui/particle-background";
@@ -241,6 +241,57 @@ export default function ProjectDetailsClient({
         toast.error("Failed to delete expense");
       }
     });
+  };
+
+  const handleGenerateProposalAI = async () => {
+    if (!notes.trim()) {
+      toast.error("Please add some notes first so the AI knows what to generate!");
+      return;
+    }
+    toast.info("AI is generating proposal...", { id: 'ai-gen' });
+    try {
+      const { generateProposal } = await import('../../ai-actions');
+      const res = await generateProposal(notes, initialProject.total_value?.toString());
+      
+      if (res.lineItems) {
+        if (!isMock) {
+          const { addLineItem } = await import('../actions');
+          for (const item of res.lineItems) {
+            await addLineItem(initialProject.id, item.desc, item.price);
+          }
+        }
+        setLineItems([...lineItems, ...res.lineItems.map((li: any, i: number) => ({ id: `ai-${Date.now()}-${i}`, desc: li.desc, price: li.price, project_id: initialProject.id }))]);
+        toast.success("AI generated items successfully!", { id: 'ai-gen' });
+      }
+    } catch (e: any) {
+      toast.error(e.message, { id: 'ai-gen' });
+    }
+  };
+
+  const handleCleanUpNotes = async () => {
+    if (!notes.trim()) return;
+    toast.info("AI is organizing notes...", { id: 'ai-notes' });
+    try {
+      const { cleanUpNotes } = await import('../../ai-actions');
+      const cleaned = await cleanUpNotes(notes);
+      setNotes(cleaned);
+      toast.success("Notes cleaned up by AI!", { id: 'ai-notes' });
+    } catch(e: any) {
+      toast.error(e.message, { id: 'ai-notes' });
+    }
+  };
+
+  const handleDraftMessage = async () => {
+    toast.info("AI is drafting a message...", { id: 'ai-msg' });
+    try {
+      const { draftMessage } = await import('../../ai-actions');
+      const draft = await draftMessage(initialProject);
+      // We can just show it in a prompt or copy to clipboard
+      navigator.clipboard.writeText(draft);
+      toast.success("Message drafted and copied to clipboard!", { id: 'ai-msg' });
+    } catch(e: any) {
+      toast.error(e.message, { id: 'ai-msg' });
+    }
   };
 
   const handleAddDeliverableLink = () => {
@@ -490,7 +541,12 @@ export default function ProjectDetailsClient({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Notes & Requirements</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Notes & Requirements</label>
+                    <button onClick={handleCleanUpNotes} className="text-xs font-bold text-cyan-600 hover:text-cyan-700 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Clean Up Notes
+                    </button>
+                  </div>
                   <textarea 
                     placeholder="Add project specific notes..."
                     value={notes}
@@ -536,17 +592,30 @@ export default function ProjectDetailsClient({
                       />
                     </div>
                   </div>
-                </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <ShutterButton onClick={() => { handleSaveOverview(); handleSaveWeddingDetails(); }} className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl">
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Details
+                  <ShutterButton 
+                    onClick={() => { handleSaveOverview(); handleSaveWeddingDetails(); }} 
+                    className="flex-[2] bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl"
+                  >
+                    <Save className="w-4 h-4 mr-2" /> Save Details
                   </ShutterButton>
-                  <ShutterButton onClick={handleGenerateMagicLink} variant="outline" className="flex-1 border-cyan-600 text-cyan-600 hover:bg-cyan-50 font-bold py-4 rounded-2xl">
-                    <Copy className="w-4 h-4 mr-2" />
-                    {magicLink ? "Copy Magic Link" : "Generate Magic Link"}
+                  
+                  <button 
+                    onClick={handleDraftMessage}
+                    className="flex-1 bg-cyan-600/10 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-600/20 font-bold px-4 py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors border border-cyan-500/20"
+                  >
+                    <MessageSquare className="w-4 h-4" /> Draft Reply
+                  </button>
+
+                  <ShutterButton 
+                    onClick={handleGenerateMagicLink} 
+                    variant="outline" 
+                    className="flex-1 border-cyan-600 text-cyan-600 hover:bg-cyan-50 font-bold py-4 rounded-2xl"
+                  >
+                    <Copy className="w-4 h-4 mr-2" /> {magicLink ? "Copy Link" : "Magic Link"}
                   </ShutterButton>
+                </div>
                 </div>
                 
                 <button onClick={() => setShowPortal(true)} className="w-full bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-zinc-900 font-bold py-4 rounded-2xl shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]">
@@ -558,6 +627,12 @@ export default function ProjectDetailsClient({
             {/* PROPOSAL TAB */}
             {activeTab === "Proposal" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex justify-between items-center px-2">
+                  <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Proposal Items</h3>
+                  <button onClick={handleGenerateProposalAI} className="text-sm font-bold text-cyan-600 hover:text-cyan-700 flex items-center gap-1 bg-cyan-500/10 px-3 py-1.5 rounded-lg border border-cyan-500/20">
+                    <Sparkles className="w-4 h-4" /> Auto-Generate
+                  </button>
+                </div>
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
                   {lineItems.map((item) => (
                     <div key={item.id} className="p-4 sm:p-5 flex items-center justify-between group">
