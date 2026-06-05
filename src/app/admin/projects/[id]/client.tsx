@@ -592,9 +592,7 @@ export default function ProjectDetailsClient({
                       />
                     </div>
                   </div>
-                  </div>
                 </div>
-
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
                   <ShutterButton 
                     onClick={() => { handleSaveOverview(); handleSaveWeddingDetails(); }} 
