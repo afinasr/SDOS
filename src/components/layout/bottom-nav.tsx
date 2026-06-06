@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Briefcase, Users, FileText, Calendar, Settings, KanbanSquare } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -28,21 +29,29 @@ export function BottomNav() {
             <Link
               key={tab.name}
               href={tab.href}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-300 relative ${
-                isActive ? "text-cyan-600 dark:text-cyan-400" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:-translate-y-0.5"
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 relative ${
+                isActive ? "text-cyan-600 dark:text-cyan-400" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 hover:-translate-y-0.5 transition-all duration-300"
               }`}
             >
               {isActive && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-cyan-100/50 dark:bg-cyan-900/30 rounded-full blur-md -z-10" />
+                <motion.div 
+                  layoutId="nav-glow"
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-cyan-100/50 dark:bg-cyan-900/30 rounded-full blur-md -z-10" 
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
               )}
-              <tab.icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 ${isActive ? "stroke-[2.5px] scale-110 mb-0.5" : "stroke-2"}`} />
-              <span className={`text-[10px] sm:text-xs tracking-wide font-sans transition-all duration-300 ${
+              <tab.icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 relative z-10 ${isActive ? "stroke-[2.5px] scale-110 mb-0.5" : "stroke-2"}`} />
+              <span className={`text-[10px] sm:text-xs tracking-wide font-sans transition-all duration-300 relative z-10 ${
                 isActive ? "font-bold text-cyan-700 dark:text-cyan-300" : "font-medium"
               }`}>
                 {tab.name}
               </span>
               {isActive && (
-                <div className="absolute -bottom-2 w-1 h-1 rounded-full bg-cyan-600 dark:bg-cyan-400" />
+                <motion.div 
+                  layoutId="nav-dot"
+                  className="absolute -bottom-2 w-1 h-1 rounded-full bg-cyan-600 dark:bg-cyan-400" 
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
               )}
             </Link>
           );

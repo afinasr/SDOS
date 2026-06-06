@@ -29,8 +29,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxRetries = 3): Promis
 
 export async function generateProposal(notes: string, budget?: string) {
   if (!apiKey) throw new Error("Gemini API key is not configured.");
-  
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig: { responseMimeType: "application/json" } });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { responseMimeType: "application/json" } });
 
   const prompt = `
     You are an AI assistant for a high-end photography/videography studio.
@@ -59,8 +58,7 @@ export async function generateProposal(notes: string, budget?: string) {
 
 export async function cleanUpNotes(rawNotes: string) {
   if (!apiKey) throw new Error("Gemini API key is not configured.");
-  
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
     Clean up these messy, raw notes taken during a client call for a photography studio.
@@ -80,8 +78,7 @@ export async function cleanUpNotes(rawNotes: string) {
 
 export async function draftMessage(context: any, customPrompt?: string) {
   if (!apiKey) throw new Error("Gemini API key is not configured.");
-  
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
     You are writing a message to a client on behalf of a premium photography studio.
@@ -117,7 +114,7 @@ export async function chatWithStudio(query: string) {
     totalExpenses: expenses?.reduce((acc, exp) => acc + Number(exp.amount), 0) || 0
   };
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
     You are 'Studio AI', a data assistant for a photography studio CRM.
